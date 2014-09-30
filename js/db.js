@@ -4,12 +4,18 @@ var border_size = 6;
 var pressTimer;
 
 function saveToLocalStorage() {
-    $(".elem").each(function(i) {
+    $(".elem").each(function (i) {
         var music_value = $(this).data("music-value");
-        if ($(this).hasClass("elem_background"))
-            localStorage.setItem(music_value, "1");
+        if ($(this).hasClass("song_clear_c"))
+            setLocalStorage(music_value, 0, "1");
+        else if($(this).hasClass("song_clear_hc"))
+            setLocalStorage(music_value, 0, "2");
+        else if($(this).hasClass("song_clear_uc"))
+            setLocalStorage(music_value, 0, "3");
+        else if ($(this).hasClass("song_clear_puc"))
+            setLocalStorage(music_value, 0, "4");
         else
-            localStorage.setItem(music_value, "0");
+            setLocalStorage(music_value, 0, "0");
     });
     updateLink();
 }
@@ -17,7 +23,8 @@ function saveToLocalStorage() {
 function readFromLocalStorage() {
     $(".elem").each(function(i) {
         var music_value = $(this).data("music-value");
-        if (localStorage.getItem(music_value) == "1") {
+        if (getLocalStorage(music_value, 0) == "1") {
+        // if (localStorage.getItem(music_value) == "1") {
             $(this).addClass("elem_background");
             $(this).find("canvas").setLayer('song_img', { opacity: 1 }).drawLayers();
         } else {
@@ -30,14 +37,26 @@ function readFromLocalStorage() {
 function updateLink() {
     var text = "?rec=";
     for (var i = 0; i < localStorage.length; ++i) {
-        text += localStorage.getItem(localStorage.key(i)) + ",";
+        text += getLocalStorage(localStorage.key(i), 0) + "," + getLocalStorage(localStorage.key(i), 1) + "|";
+        // text += localStorage.getItem(localStorage.key(i)) + ",";
     }
-    text = $.url().attr("host") + $.url().attr("path") + text.substring(0, text.length - 1);
+    text = text.substring(0, text.length - 1);
+    text = $.url().attr("host") + $.url().attr("path") + text;
     $("#link").val(text);
 }
 
 function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function getLocalStorage(key, index) {
+    return JSON.parse(localStorage.getItem(key) || "[]")[index];
+}
+
+function setLocalStorage(key, index, value) {
+    var original_value = JSON.parse(localStorage.getItem(key) || "[]");
+    original_value[index] = value;
+    localStorage.setItem(key, JSON.stringify(original_value));
 }
 
 function appendSongsByDbResult(db_result, div_dom, header_text) {
@@ -51,11 +70,54 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
         // append new div and song
         div_right_dom.append("<div class='elem' data-music-value=\"" + entry.value + " " + entry.type + "\"></div>");
         var elem_dom = div_right_dom.find("div").last();
+        var key = entry.value + " " + entry.type;
 
-        var opacity = 0.2;
-        if (localStorage.getItem(entry.value + " " + entry.type) == "1") {
-            elem_dom.toggleClass("elem_background");
-            opacity = 1;
+        // red localStorage & set opacity
+        var opacity = 1;
+        var clear_text = "";
+        var clear_visible = false;
+        switch (getLocalStorage(key, 0)) {
+            case "0":
+                opacity = 0.2;
+                break;
+            case "1":
+                opacity = 1;
+                elem_dom.addClass("song_clear_c");
+                break;
+            case "2":
+                opacity = 1;
+                elem_dom.addClass("song_clear_hc");
+                break;
+            case "3":
+                opacity = 1;
+                elem_dom.addClass("song_clear_uc");
+                break;
+            case "4":
+                opacity = 1;
+                elem_dom.addClass("song_clear_puc");
+                break;
+        }
+        switch (getLocalStorage(key, 1)) {
+            case "0":
+                clear_text = "";
+                clear_visible = false;
+                break;
+            case "1":
+                clear_text = "B";
+                clear_visible = true;
+                break;
+            case "2":
+                clear_text = "A";
+                clear_visible = true;
+                break;
+            case "3":
+                clear_text = "AA";
+                clear_visible = true;
+                break;
+            case "4":
+                clear_text = "AAA";
+                clear_visible = true;
+                break;
         }
 
         elem_dom.append("<canvas class='song_img' height='" + (image_size + border_size * 2) + "' width='" + (image_size + border_size * 2) + "'> </canvas>");
@@ -154,18 +216,93 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                     },
 
                     click: is_mobile ? null : function (layer) {
-                        if (layer.opacity < 1) {
-                            $(this).setLayer('song_img', {
-                                opacity: 1
-                            }).drawLayers();
-                        } else {
-                            $(this).setLayer('song_img', {
-                                opacity: 0.2
-                            }).drawLayers();
+                        // 根據點燈方式做不同的點燈效果
+                        var clear_state;
+                        if ($("#switch_click").prop("checked") == false) {      // Clear 點燈
+                            // get current state
+                            clear_state = getLocalStorage(key, 0);
+                            $(this).parent().removeClass("song_clear_c");
+                            $(this).parent().removeClass("song_clear_hc");
+                            $(this).parent().removeClass("song_clear_uc");
+                            $(this).parent().removeClass("song_clear_puc");
+                            switch (clear_state) {
+                            case "0":
+                                $(this).setLayer('song_img', {
+                                    opacity: 1
+                                }).drawLayers();
+                                $(this).parent().addClass("song_clear_c");
+                                setLocalStorage(key, 0, "1");
+                                break;
+                            case "1":
+                                $(this).setLayer('song_img', {
+                                    opacity: 1
+                                }).drawLayers();
+                                $(this).parent().addClass("song_clear_hc");
+                                setLocalStorage(key, 0, "2");
+                                break;
+                            case "2":
+                                $(this).setLayer('song_img', {
+                                    opacity: 1
+                                }).drawLayers();
+                                $(this).parent().addClass("song_clear_uc");
+                                setLocalStorage(key, 0, "3");
+                                break;
+                            case "3":
+                                $(this).setLayer('song_img', {
+                                    opacity: 1
+                                }).drawLayers();
+                                $(this).parent().addClass("song_clear_puc");
+                                setLocalStorage(key, 0, "4");
+                                break;
+                            case "4":
+                                $(this).setLayer('song_img', {
+                                    opacity: 0.2
+                                }).drawLayers();
+                                setLocalStorage(key, 0, "0");
+                                break;
+                            }
+                        } else {    // 分數點燈
+                            // get current state
+                            clear_state = getLocalStorage(key, 1);
+                            switch (clear_state) {
+                                case "0":
+                                    $(this).setLayer('clear_style', {
+                                        visible: true,
+                                        text: "B"
+                                    }).drawLayers();
+                                    setLocalStorage(key, 1, "1");
+                                    break;
+                                case "1":
+                                    $(this).setLayer('clear_style', {
+                                        visible: true,
+                                        text: "A"
+                                    }).drawLayers();
+                                    setLocalStorage(key, 1, "2");
+                                    break;
+                                case "2":
+                                    $(this).setLayer('clear_style', {
+                                        visible: true,
+                                        text: "AA"
+                                    }).drawLayers();
+                                    setLocalStorage(key, 1, "3");
+                                    break;
+                                case "3":
+                                    $(this).setLayer('clear_style', {
+                                        visible: true,
+                                        text: "AAA"
+                                    }).drawLayers();
+                                    setLocalStorage(key, 1, "4");
+                                    break;
+                                case "4":
+                                    $(this).setLayer('clear_style', {
+                                        visible: false
+                                    }).drawLayers();
+                                    setLocalStorage(key, 1, "0");
+                                    break;
+                            }
                         }
 
-                        $(this).parent().toggleClass("elem_background");
-                        saveToLocalStorage();
+                        updateLink();
                     }
                 });
             }
@@ -182,8 +319,27 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                 name: 'song_info',
                 visible: false
             });
+
+            canvas_dom.drawText({
+                fillStyle: 'rgb(255,255,0)',
+                strokeStyle: 'rgb(0,0,255)',
+                fontStyle: 'bold',
+                strokeWidth: 1,
+                x: border_size + image_size - 2,
+                y: border_size + 10,
+                // x: border_size + image_size/2, y: border_size + image_size/2,
+                // fromCenter: true,
+                fontSize: 24,
+                fontFamily: 'Consolas, Verdana, sans-serif, 微軟正黑體',
+                align: 'right',
+                respectAlign: true,
+                layer: true,
+                name: 'clear_style',
+                visible: clear_visible,
+                text: clear_text
+            });
         }
-        image_obj.src = "img/" + entry.value + " " + entry.type + ".png";
+        image_obj.src = "img/" + key + ".png";
     });
 }
 
@@ -258,7 +414,6 @@ function clearAll() {
         $(this).removeClass("elem_background");
         $(this).find("canvas").setLayer("song_img", { opacity: 0.2 }).drawLayers();
     });
-    // saveToLocalStorage();
     localStorage.clear();
     updateLink();
 }
@@ -268,16 +423,20 @@ $(document).ready(function () {
     if (localStorage.length == 0) {
         var db_result = music_db();
         db_result.each(function (entry) {
-            localStorage.setItem(entry.value + " " + entry.type, "0");
+            var key = entry.value + " " + entry.type;
+            setLocalStorage(key, 0, "0");
+            setLocalStorage(key, 1, "0");
         });
     }
 
     // get localStorage
     var rec = $.url().param("rec");
     if (rec != undefined) {
-        rec = rec.split(",");
-        for (var index = 0; index < rec.length; ++index) {
-            localStorage.setItem(localStorage.key(index), rec[index]);
+        var parsed_rec = rec.split("|");
+        for (var index in parsed_rec) {
+            var arr = parsed_rec[index].split(",");
+            setLocalStorage(localStorage.key(index), 0, arr[0]);
+            setLocalStorage(localStorage.key(index), 1, arr[1]);
         }
         updateLink();
     }
@@ -297,8 +456,3 @@ $(document).ready(function () {
         transition: 'all 0.3s'
     });
 });
-
-function ts() {
-    if (this.readOnly) this.checked = this.readOnly = false;
-    else if (!this.checked) this.readOnly = this.indeterminate = true;
-}

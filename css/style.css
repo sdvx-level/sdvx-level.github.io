@@ -39,6 +39,22 @@
     background-color: red;
 }
 
+.song_clear_c {
+    background-color: green;
+}
+
+.song_clear_hc {
+    background-color: purple;
+}
+
+.song_clear_uc {
+    background-color: red;
+}
+
+.song_clear_puc {
+    background-color: yellow;
+}
+
 .canvas_opacity {
     -ms-opacity: 0.4;
     opacity: 0.4;
