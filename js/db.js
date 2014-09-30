@@ -36,209 +36,100 @@ function updateLink() {
     $("#link").val(text);
 }
 
-function appendSongsByLevel(level) {
-    var div_id = "level" + level;
-    var div_dom = $("#" + div_id);
-    
-    // search the db
-    for (var score = 10; score >= -10; --score) {
-        var db_result = music_db({ level: level, score: score }).order("title asec");
-        if (db_result.count() != 0) {
-            // append new row
-            div_dom.append("<div class='score_div score_div_no_bottom'><div class='left_div'></div><div class='right_div'></div></div>");
-            // set score text
-            div_dom.find(".left_div").last().text(score);
-
-            var div_right_dom = div_dom.find(".right_div").last();
-            db_result.each(function(entry) {
-                // append new div and song
-                div_right_dom.append("<div class='elem' data-music-value=\"" + entry.value + " " + entry.type + "\"></div>");
-                var elem_dom = div_right_dom.find("div").last();
-
-                var opacity = 0.2;
-                if (localStorage.getItem(entry.value + " " + entry.type) == "1") {
-                    elem_dom.toggleClass("elem_background");
-                    opacity = 1;
-                }
-
-                // div_right_dom.append("<div class='elem'><img class='img_disable' src=\"img/" + entry.value + " " + entry.type + ".png\" /></div>");
-                elem_dom.append("<canvas class='song_img' height='" + (image_size + border_size * 2) + "' width='" + (image_size + border_size * 2) + "'> </canvas>");
-                var canvas_dom = elem_dom.find("canvas").last();
-
-                var image_obj = new Image();
-                var is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                image_obj.onload = function () {
-                    if (is_mobile) {
-                        canvas_dom.drawImage({
-                            source: image_obj,
-                            opacity: 1,
-                            x: border_size,
-                            y: border_size,
-                            width: image_size,
-                            height: image_size,
-                            fromCenter: false,
-                            layer: true,
-                            name: 'song_img',
-
-                            click: function(layer) {
-                                // set up overlap div text
-                                var title_name = entry.title;
-                                if (entry.type == 3)
-                                    title_name += " [EXH]";
-                                else if (entry.type == 4)
-                                    title_name += " [INF]";
-                                var info_text = "<img src=\"" + "img/" + entry.value + " " + entry.type + ".png" + "\" /><br />";
-                                info_text += title_name + "<br />";
-                                info_text += "短鍵: " + entry.short_btn + "<br />";
-                                info_text += "長短混合: " + entry.short_long_mix + "<br />";
-                                info_text += "旋鈕: " + entry.analog + "<br />";
-                                info_text += "腦力訓練: " + entry.brain_train + "<br />";
-                                info_text += "節奏: " + entry.rythm + "<br />";
-                                info_text += "演出陷阱: " + entry.trap + "<br />";
-                                $("#song_info_text").html(info_text);
-                                // show up overlap div
-                                $('#song_info_popup').popup('show');
-                            }
-                        });
-                    } else {
-                        canvas_dom.drawImage({
-                            source: image_obj,
-                            opacity: opacity,
-                            x: border_size,
-                            y: border_size,
-                            width: image_size,
-                            height: image_size,
-                            fromCenter: false,
-                            layer: true,
-                            name: 'song_img',
-
-                            mousemove: is_mobile ? null : function (layer) {
-                                var title_name = entry.title;
-                                if (entry.type == 3)
-                                    title_name += " [EXH]";
-                                else if (entry.type == 4)
-                                    title_name += " [INF]";
-                                $(this).setLayer('song_info', {
-                                    visible: true,
-                                    text: title_name + "\n短　　鍵: " + entry.short_btn + "\n長短混合: " + entry.short_long_mix + "\n旋　　鈕: " + entry.analog + "\n腦力訓練: " + entry.brain_train + "\n節　　奏: " + entry.rythm + "\n演出陷阱: " + entry.trap
-                                });
-                            },
-                            mouseout: function (layer) {
-                                if (is_mobile == false) {
-                                    $(this).setLayer('song_info', {
-                                        visible: false
-                                    });
-                                }
-                                clearTimeout(pressTimer);
-                            },
-
-                            mousedown: function (layer) {
-                                pressTimer = setTimeout(function () {
-                                    // set up overlap div text
-                                    var title_name = entry.title;
-                                    if (entry.type == 3)
-                                        title_name += " [EXH]";
-                                    else if (entry.type == 4)
-                                        title_name += " [INF]";
-                                    var info_text = "<img src=\"" + "img/" + entry.value + " " + entry.type + ".png" + "\" /><br />";
-                                    info_text += title_name + "<br />";
-                                    info_text += "短鍵: " + entry.short_btn + "<br />";
-                                    info_text += "長短混合: " + entry.short_long_mix + "<br />";
-                                    info_text += "旋鈕: " + entry.analog + "<br />";
-                                    info_text += "腦力訓練: " + entry.brain_train + "<br />";
-                                    info_text += "節奏: " + entry.rythm + "<br />";
-                                    info_text += "演出陷阱: " + entry.trap + "<br />";
-                                    $("#song_info_text").html(info_text);
-                                    // show up overlap div
-                                    $('#song_info_popup').popup('show');
-                                }, 1000);
-                            },
-                            mouseup: function (layer) {
-                                clearTimeout(pressTimer);
-                            },
-
-                            click: is_mobile ? null : function (layer) {
-                                if (layer.opacity < 1) {
-                                    $(this).setLayer('song_img', {
-                                        opacity: 1
-                                    }).drawLayers();
-                                } else {
-                                    $(this).setLayer('song_img', {
-                                        opacity: 0.2
-                                    }).drawLayers();
-                                }
-
-                                $(this).parent().toggleClass("elem_background");
-                                saveToLocalStorage();
-                            }
-                        });
-                    }
-                    
-                    canvas_dom.drawText({
-                        fillStyle: '#9cf',
-                        x: border_size, y: border_size,
-                        maxWidth: image_size,
-                        fromCenter: false,
-                        fontSize: 14,
-                        fontFamily: 'Verdana, sans-serif, 微軟正黑體',
-                        align: 'left',
-                        layer: true,
-                        name: 'song_info',
-                        visible: false
-                    });
-                }
-                image_obj.src = "img/" + entry.value + " " + entry.type + ".png";
-            });
-        }
-    }
-    // remove last bottom
-    div_dom.find(".score_div").last().removeClass("score_div_no_bottom");
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function appendByScore(score) {
-    var div_id = "score" + score;
-    var div_dom = $("#" + div_id);
-    
-    // search the db
-    var db_result = music_db({ score: score }).order("title asec");
-    if (db_result.count() != 0) {
-        // append new row
-        div_dom.append("<div class='score_div score_div_no_bottom'><div class='left_div'></div><div class='right_div'></div></div>");
-        // set score text
-        // div_dom.find(".left_div").last().text(score);
+function appendSongsByDbResult(db_result, div_dom, header_text) {
+    // append new row
+    div_dom.append("<div class='score_div score_div_no_bottom'><div class='left_div'></div><div class='right_div'></div></div>");
+    // set score text
+    div_dom.find(".left_div").last().text(header_text);
 
-        var div_right_dom = div_dom.find(".right_div").last();
-        db_result.each(function (entry) {
-            // append new div and song
-            div_right_dom.append("<div class='elem' data-music-value=\"" + entry.value + " " + entry.type + "\"></div>");
-            var elem_dom = div_right_dom.find("div").last();
+    var div_right_dom = div_dom.find(".right_div").last();
+    db_result.each(function (entry) {
+        // append new div and song
+        div_right_dom.append("<div class='elem' data-music-value=\"" + entry.value + " " + entry.type + "\"></div>");
+        var elem_dom = div_right_dom.find("div").last();
 
-            var opacity = 0.2;
-            if (localStorage.getItem(entry.value + " " + entry.type) == "1") {
-                elem_dom.toggleClass("elem_background");
-                opacity = 1;
-            }
+        var opacity = 0.2;
+        if (localStorage.getItem(entry.value + " " + entry.type) == "1") {
+            elem_dom.toggleClass("elem_background");
+            opacity = 1;
+        }
 
-            // div_right_dom.append("<div class='elem'><img class='img_disable' src=\"img/" + entry.value + " " + entry.type + ".png\" /></div>");
-            elem_dom.append("<canvas class='song_img' height='" + (image_size + border_size * 2) + "' width='" + (image_size + border_size * 2) + "'> </canvas>");
-            var canvas_dom = elem_dom.find("canvas").last();
+        elem_dom.append("<canvas class='song_img' height='" + (image_size + border_size * 2) + "' width='" + (image_size + border_size * 2) + "'> </canvas>");
+        var canvas_dom = elem_dom.find("canvas").last();
 
-            var image_obj = new Image();
-            var is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            image_obj.onload = function () {
-                if (is_mobile) {
-                    canvas_dom.drawImage({
-                        source: image_obj,
-                        opacity: 1,
-                        x: border_size,
-                        y: border_size,
-                        width: image_size,
-                        height: image_size,
-                        fromCenter: false,
-                        layer: true,
-                        name: 'song_img',
+        var image_obj = new Image();
+        var is_mobile = isMobile();
+        image_obj.onload = function () {
+            if (is_mobile) {
+                canvas_dom.drawImage({
+                    source: image_obj,
+                    opacity: 1,
+                    x: border_size,
+                    y: border_size,
+                    width: image_size,
+                    height: image_size,
+                    fromCenter: false,
+                    layer: true,
+                    name: 'song_img',
 
-                        click: function (layer) {
+                    click: function (layer) {
+                        // set up overlap div text
+                        var title_name = entry.title;
+                        if (entry.type == 3)
+                            title_name += " [EXH]";
+                        else if (entry.type == 4)
+                            title_name += " [INF]";
+                        var info_text = "<img src=\"" + "img/" + entry.value + " " + entry.type + ".png" + "\" /><br />";
+                        info_text += title_name + "<br />";
+                        info_text += "短鍵: " + entry.short_btn + "<br />";
+                        info_text += "長短混合: " + entry.short_long_mix + "<br />";
+                        info_text += "旋鈕: " + entry.analog + "<br />";
+                        info_text += "腦力訓練: " + entry.brain_train + "<br />";
+                        info_text += "節奏: " + entry.rythm + "<br />";
+                        info_text += "演出陷阱: " + entry.trap + "<br />";
+                        $("#song_info_text").html(info_text);
+                        // show up overlap div
+                        $('#song_info_popup').popup('show');
+                    }
+                });
+            } else {
+                canvas_dom.drawImage({
+                    source: image_obj,
+                    opacity: opacity,
+                    x: border_size,
+                    y: border_size,
+                    width: image_size,
+                    height: image_size,
+                    fromCenter: false,
+                    layer: true,
+                    name: 'song_img',
+
+                    mousemove: is_mobile ? null : function (layer) {
+                        var title_name = entry.title;
+                        if (entry.type == 3)
+                            title_name += " [EXH]";
+                        else if (entry.type == 4)
+                            title_name += " [INF]";
+                        $(this).setLayer('song_info', {
+                            visible: true,
+                            text: title_name + "\n短　　鍵: " + entry.short_btn + "\n長短混合: " + entry.short_long_mix + "\n旋　　鈕: " + entry.analog + "\n腦力訓練: " + entry.brain_train + "\n節　　奏: " + entry.rythm + "\n演出陷阱: " + entry.trap
+                        });
+                    },
+                    mouseout: function (layer) {
+                        if (is_mobile == false) {
+                            $(this).setLayer('song_info', {
+                                visible: false
+                            });
+                        }
+                        clearTimeout(pressTimer);
+                    },
+
+                    mousedown: function (layer) {
+                        pressTimer = setTimeout(function () {
                             // set up overlap div text
                             var title_name = entry.title;
                             if (entry.type == 3)
@@ -256,98 +147,69 @@ function appendByScore(score) {
                             $("#song_info_text").html(info_text);
                             // show up overlap div
                             $('#song_info_popup').popup('show');
+                        }, 1000);
+                    },
+                    mouseup: function (layer) {
+                        clearTimeout(pressTimer);
+                    },
+
+                    click: is_mobile ? null : function (layer) {
+                        if (layer.opacity < 1) {
+                            $(this).setLayer('song_img', {
+                                opacity: 1
+                            }).drawLayers();
+                        } else {
+                            $(this).setLayer('song_img', {
+                                opacity: 0.2
+                            }).drawLayers();
                         }
-                    });
-                } else {
-                    canvas_dom.drawImage({
-                        source: image_obj,
-                        opacity: opacity,
-                        x: border_size,
-                        y: border_size,
-                        width: image_size,
-                        height: image_size,
-                        fromCenter: false,
-                        layer: true,
-                        name: 'song_img',
 
-                        mousemove: is_mobile ? null : function (layer) {
-                            var title_name = entry.title;
-                            if (entry.type == 3)
-                                title_name += " [EXH]";
-                            else if (entry.type == 4)
-                                title_name += " [INF]";
-                            $(this).setLayer('song_info', {
-                                visible: true,
-                                text: title_name + "\n短　　鍵: " + entry.short_btn + "\n長短混合: " + entry.short_long_mix + "\n旋　　鈕: " + entry.analog + "\n腦力訓練: " + entry.brain_train + "\n節　　奏: " + entry.rythm + "\n演出陷阱: " + entry.trap
-                            });
-                        },
-                        mouseout: function (layer) {
-                            if (is_mobile == false) {
-                                $(this).setLayer('song_info', {
-                                    visible: false
-                                });
-                            }
-                            clearTimeout(pressTimer);
-                        },
-
-                        mousedown: function (layer) {
-                            pressTimer = setTimeout(function () {
-                                // set up overlap div text
-                                var title_name = entry.title;
-                                if (entry.type == 3)
-                                    title_name += " [EXH]";
-                                else if (entry.type == 4)
-                                    title_name += " [INF]";
-                                var info_text = "<img src=\"" + "img/" + entry.value + " " + entry.type + ".png" + "\" /><br />";
-                                info_text += title_name + "<br />";
-                                info_text += "短鍵: " + entry.short_btn + "<br />";
-                                info_text += "長短混合: " + entry.short_long_mix + "<br />";
-                                info_text += "旋鈕: " + entry.analog + "<br />";
-                                info_text += "腦力訓練: " + entry.brain_train + "<br />";
-                                info_text += "節奏: " + entry.rythm + "<br />";
-                                info_text += "演出陷阱: " + entry.trap + "<br />";
-                                $("#song_info_text").html(info_text);
-                                // show up overlap div
-                                $('#song_info_popup').popup('show');
-                            }, 1000);
-                        },
-                        mouseup: function (layer) {
-                            clearTimeout(pressTimer);
-                        },
-
-                        click: is_mobile ? null : function (layer) {
-                            if (layer.opacity < 1) {
-                                $(this).setLayer('song_img', {
-                                    opacity: 1
-                                }).drawLayers();
-                            } else {
-                                $(this).setLayer('song_img', {
-                                    opacity: 0.2
-                                }).drawLayers();
-                            }
-
-                            $(this).parent().toggleClass("elem_background");
-                            saveToLocalStorage();
-                        }
-                    });
-                }
-
-                canvas_dom.drawText({
-                    fillStyle: '#9cf',
-                    x: border_size, y: border_size,
-                    maxWidth: image_size,
-                    fromCenter: false,
-                    fontSize: 14,
-                    fontFamily: 'Verdana, sans-serif, 微軟正黑體',
-                    align: 'left',
-                    layer: true,
-                    name: 'song_info',
-                    visible: false
+                        $(this).parent().toggleClass("elem_background");
+                        saveToLocalStorage();
+                    }
                 });
             }
-            image_obj.src = "img/" + entry.value + " " + entry.type + ".png";
-        });
-        // div_right_dom.find("canvas").on('click', img_toggle_enable);
+
+            canvas_dom.drawText({
+                fillStyle: '#9cf',
+                x: border_size, y: border_size,
+                maxWidth: image_size,
+                fromCenter: false,
+                fontSize: 14,
+                fontFamily: 'Verdana, sans-serif, 微軟正黑體',
+                align: 'left',
+                layer: true,
+                name: 'song_info',
+                visible: false
+            });
+        }
+        image_obj.src = "img/" + entry.value + " " + entry.type + ".png";
+    });
+}
+
+function appendSongsByLevel(level) {
+    var div_id = "level" + level;
+    var div_dom = $("#" + div_id);
+    
+    // search the db
+    for (var score = 10; score >= -10; --score) {
+        var db_result = music_db({ level: level, score: score }).order("title asec");
+        if (db_result.count() != 0) {
+            appendSongsByDbResult(db_result, div_dom, score);
+        }
+    }
+    // remove last bottom
+    div_dom.find(".score_div").last().removeClass("score_div_no_bottom");
+}
+
+function appendByScore(score) {
+    var div_id = "score" + score;
+    var div_dom = $("#" + div_id);
+    
+    // search the db
+    var db_result = music_db({ score: score }).order("title asec");
+    if (db_result.count() != 0) {
+        appendSongsByDbResult(db_result, div_dom, "");
     }
     // remove last bottom
     div_dom.find(".score_div").last().removeClass("score_div_no_bottom");

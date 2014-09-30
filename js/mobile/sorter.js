@@ -1,13 +1,22 @@
-﻿$.mobile.document.on("pagecreate", "#index", function () {
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        $("body").addClass("no_scroll");
+﻿/*  Document on pagecreate #index
+ *  1. 在手機上關閉 scroll bar，因為會誤按
+ *  2. window resize 時自動修正右方 bar 高度
+ *  3. 設定點擊 bar 時跳轉的 event
+ *  4. 產生 score page 的內容
+ *  5. 
+ */
+$.mobile.document.on("pagecreate", "#index", function () {
+    // 關閉手機 scroll bar
+    if (isMobile()) {
+        disableScrollBar();
     }
 
-    // auto set bar height
+    // 自動修正右方的 bar 高度
     resizeBarHeight();
-    // set on resize
+    // 設定當 window resize 的時候自動修正右方 bar 高度
     $(window).resize(resizeBarHeight);
 
+    // 設定點擊右方 bar 時需要自動跳到相對應的 score 位置
     $.mobile.document.on("click", "#sorter li", function() {
         var top,
             letter = $(this).data("score"),
@@ -20,31 +29,47 @@
         }
     });
 
-    // generate page content
+    // 產生 score page 的資料
     for (var score = 6; score >= -6; --score) {
-        appendSongsByScore(score, "Score " + score);
+        appendSongsByScoreAndLevel(score, 15, "Score " + score);
     }
-    appendSongsByScore(100, "個人差");
-    appendSongsByScore(-100, "未排入");
-    // set
-    $(document).on("popupbeforeposition", ".ui-popup", function() {
+    appendSongsByScoreAndLevel(100, 15, "個人差");
+    appendSongsByScoreAndLevel(-100, 15, "未排入");
+
+    // 設定 popup 的 event
+    $(document).on("popupbeforeposition", ".ui-popup", function () {
+        // 設定圖片高度與最大高度
         var image = $(this).children("img"),
             height = image.height(),
             width = image.width();
         $(this).attr({ "height": height, "width": width });
         var max_height = $(window).height() - 68 + "px";
         $("img.photo", this).css("max-height", max_height);
+        // 設定 popup 的 width
         if ($(window).width() * 0.9 > 300)
             $(this).parent().width("300px");
         else
             $(this).parent().width("90%");
+        // 設定當 popup 出現時，禁止滑動
         $("body").on("touchmove", false);
+        $("body").addClass("no_scroll");
     });
-    $(document).on("popupafterclose", ".ui-popup", function() {
+    $(document).on("popupafterclose", ".ui-popup", function () {
+        // 刪除 popup instance
         $(this).remove();
+        // 重新啟動滑動
         $("body").unbind("touchmove");
+        $("body").removeClass("no_scroll");
     });
 });
+
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function disableScrollBar() {
+    $("body").addClass("no_scroll");
+}
 
 function resizeBarHeight() {
     $("#sorter ul li").css("height", (($(window).height() - ($("#sorter ul li").length - 1)) / $("#sorter ul li").length).toString() + "px");
@@ -63,12 +88,12 @@ function getTitleByNameAndType(name, type) {
     else return "";
 };
 
-function appendSongsByScore(score, header_name) {
+function appendSongsByScoreAndLevel(score, level, header_name) {
     var song_list_dom = $("#songList");
     song_list_dom.append("<div data-role=\"collapsible\" data-collapsed=\"false\" data-collapsed-icon=\"carat-d\" data-expanded-icon=\"carat-u\" id=\"score" + score + "\"></div>");
     var score_dom = song_list_dom.find("div:last");
     score_dom.append("<h4>" + header_name + "</h4>");
-    var db_result = music_db({ score: score }).order("title asec");
+    var db_result = music_db({ level: level, score: score }).order("title asec");
     if (db_result.count() != 0) {
         db_result.each(function (entry) {
             score_dom.append("<img src=\"img/" + entry.value + " " + entry.type + ".png\" data-filtertext=\"" + entry.title + "\" />");
@@ -103,14 +128,6 @@ function appendSongsByScore(score, header_name) {
                 info += addLeftBlock("演出陷阱");
                 info += addRightBlock("song_info_trap", entry.trap);
                 info += '</div>';
-                /*
-                info += "短鍵: " + entry.short_btn + "<br />";
-                info += "長短混合: " + entry.short_long_mix + "<br />";
-                info += "旋鈕: " + entry.analog + "<br />";
-                info += "腦力訓練: " + entry.brain_train + "<br />";
-                info += "節奏: " + entry.rythm + "<br />";
-                info += "演出陷阱: " + entry.trap + "<br />";
-                */
 
                 $(header)
                     .appendTo($(popup)
