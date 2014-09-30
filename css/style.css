@@ -1,0 +1,88 @@
+﻿body {
+    font-family: Consolas, 微軟正黑體;
+    background-color: #222222;
+    color: white;
+}
+
+#levels {
+    background-color: #222222;
+    color: white;
+}
+
+.left_div {
+	display:table-cell;
+	width: 100px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.right_div {
+    display:table-cell;
+    width: auto;
+    font-size: 0;
+    letter-spacing: 0;
+    word-spacing: 0;
+}
+
+.elem {
+
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    font-size: 0;
+    letter-spacing: 0;
+    word-spacing: 0;
+    text-align: center;
+}
+
+.elem_background {
+    background-color: red;
+}
+
+.canvas_opacity {
+    -ms-opacity: 0.4;
+    opacity: 0.4;
+}
+
+.score_div {
+    border: 2px solid;
+}
+
+.score_div_no_bottom {
+    border-bottom: none;
+}
+
+.pos_absolute {
+    position: absolute;
+}
+
+.song_info_popup_close {
+    font-size: 50px;
+    font-family: 微軟正黑體;
+    border-radius: 4px;
+    width: 100%;
+    -webkit-box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    -ms-box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.popup {
+    background-color: #bbbbbb;
+    color: black;
+    -ms-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    -ms-box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    padding: 19px;
+    font-size: 50px;
+    text-align: center;
+    width: 80%;
+}
+
+.song_info_text {
+    text-align: center;
+}
+
+a {
+    color: white;
+}

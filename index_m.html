@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>SDVX 地力表 feat. Mobile</title>
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.css" />
+        <link rel="stylesheet" href="css/mobile/sorter.css" />
+        <script src="js/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script>
+        <script src="js/taffy-min.js"></script>
+        <script src="js/music_db.js"></script>
+        <script src="js/mobile/sorter.js"></script>
+    </head>
+<body>
+    <div data-role="page" data-theme="b" id="index">
+        <div id="sorter">
+            <ul data-role="listview">
+                <li data-score="6"><span>6</span></li>
+                <li data-score="5"><span>5</span></li>
+                <li data-score="4"><span>4</span></li>
+                <li data-score="3"><span>3</span></li>
+                <li data-score="2"><span>2</span></li>
+                <li data-score="1"><span>1</span></li>
+                <li data-score="0"><span>0</span></li>
+                <li data-score="-1"><span>-1</span></li>
+                <li data-score="-2"><span>-2</span></li>
+                <li data-score="-3"><span>-3</span></li>
+                <li data-score="-4"><span>-4</span></li>
+                <li data-score="-5"><span>-5</span></li>
+                <li data-score="-6"><span>-6</span></li>
+                <li data-score="100"><span>#</span></li>
+                <li data-score="-100"><span>?</span></li>
+            </ul>
+        </div>
+        <div data-filter="true" data-children="> div div img" id="songList">
+        </div>
+    </div>
+</body>
+</html>

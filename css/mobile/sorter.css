@@ -1,0 +1,61 @@
+﻿#sorter li {
+    display: block;
+    padding: 0;
+    font-size: 8px;
+    padding-left: 5px;
+    text-align: center;
+}
+#sorter li span {
+    display: block;
+}
+#sorter{
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 8%;
+    z-index: 1;
+}
+#sorter ul{
+    height: 100%;
+}
+#songList{
+    padding-right: 8.5%;
+}
+
+.ui-filterable {
+    padding-right: 8.5%;
+}
+
+.ui-header .ui-title {
+    /* text-overflow: clip; */
+    white-space: normal;
+    margin: 0;
+    padding: 15px 15px;
+}
+
+.no_scroll {
+    overflow: hidden;
+}
+
+.ui-header, .ui-collapsible-heading > .ui-collapsible-heading-toggle, .ui-input-search > input, .ui-li-static > span, .popup_info  {
+    font-family: Trebuchet MS, Tahoma, Arial, 微軟正黑體;
+}
+
+.popup_info {
+    text-align: center;
+    margin: 0 auto;
+}
+
+.block-left {
+    text-align: right;
+}
+
+.block-right {
+    text-align: left;
+    max-width: 200px;
+}
+
+.block-right > div > .ui-state-disabled {
+    -ms-opacity: 1;
+    opacity: 1;
+}
