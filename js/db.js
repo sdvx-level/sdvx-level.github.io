@@ -411,22 +411,33 @@ function downloadAsPng() {
 
 function clearAll() {
     $(".elem").each(function () {
-        $(this).removeClass("elem_background");
+        $(this).removeClass("song_clear_c");
+        $(this).removeClass("song_clear_hc");
+        $(this).removeClass("song_clear_uc");
+        $(this).removeClass("song_clear_puc");
+        $(this).find("canvas").setLayer("clear_style", {
+            visible: false
+        });
         $(this).find("canvas").setLayer("song_img", { opacity: 0.2 }).drawLayers();
     });
     localStorage.clear();
+    resetLocalStorage();
     updateLink();
+}
+
+function resetLocalStorage() {
+    var db_result = music_db();
+    db_result.each(function (entry) {
+        var key = entry.value + " " + entry.type;
+        setLocalStorage(key, 0, "0");
+        setLocalStorage(key, 1, "0");
+    });
 }
 
 $(document).ready(function () {
     // flush localStorage
     if (localStorage.length == 0) {
-        var db_result = music_db();
-        db_result.each(function (entry) {
-            var key = entry.value + " " + entry.type;
-            setLocalStorage(key, 0, "0");
-            setLocalStorage(key, 1, "0");
-        });
+        resetLocalStorage();
     }
 
     // get localStorage
