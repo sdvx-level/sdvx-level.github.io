@@ -409,6 +409,22 @@ function downloadAsPng() {
     });
 }
 
+function extractToken(hash) {
+    var match = hash.match(/access_token=(\w+)/);
+    return !!match && match[1];
+};
+
+function uploadToImgur() {
+    html2canvas($("#levels")[0], {
+        onrendered: function (canvas) {
+            var img = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
+            localStorage.doUpload = true;
+            localStorage.imageBase64 = img;
+            window.location = "https://api.imgur.com/oauth2/authorize?response_type=token&client_id=ee6a02964edbb05";
+        }
+    });
+}
+
 function clearAll() {
     $(".elem").each(function () {
         $(this).removeClass("song_clear_c");
@@ -460,10 +476,36 @@ $(document).ready(function () {
 
     $("#download_as_png").on("click", downloadAsPng);
     $("#clear_all_btn").on("click", clearAll);
+    $("#upload_to_imgur").on("click", uploadToImgur);
 
     $('#song_info_popup').popup({
         blur: false,
         scrolllock: false,
         transition: 'all 0.3s'
     });
+
+    // 檢查 upload to imgur 是否被 trigger
+    var token = extractToken(document.location.hash);
+    if (token && JSON.parse(localStorage.doUpload)) {
+        localStorage.doUpload = false;
+        $("#levels").hide();
+        $("#upload_info").show();
+
+        $.ajax({
+            url: 'https://api.imgur.com/3/image',
+            method: 'POST',
+            headers: {
+                Authorization: 'Bearer ' + token,
+                Accept: 'application/json'
+            },
+            data: {
+                image: localStorage.imageBase64,
+                type: 'base64'
+            },
+            success: function (result) {
+                var id = result.data.id;
+                window.location = 'https://imgur.com/gallery/' + id;
+            }
+        });
+    }
 });
