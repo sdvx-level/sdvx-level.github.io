@@ -418,8 +418,11 @@ function uploadToImgur() {
     html2canvas($("#levels")[0], {
         onrendered: function (canvas) {
             var img = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
-            localStorage.doUpload = true;
-            localStorage.imageBase64 = img;
+            sessionStorage.doUpload = true;
+            sessionStorage.imageBase64 = img;
+            // testing used
+            // window.location = "https://api.imgur.com/oauth2/authorize?response_type=token&client_id=50df2d703759afd";
+            // publish used
             window.location = "https://api.imgur.com/oauth2/authorize?response_type=token&client_id=ee6a02964edbb05";
         }
     });
@@ -486,8 +489,8 @@ $(document).ready(function () {
 
     // 檢查 upload to imgur 是否被 trigger
     var token = extractToken(document.location.hash);
-    if (token && JSON.parse(localStorage.doUpload)) {
-        localStorage.doUpload = false;
+    if (token && JSON.parse(sessionStorage.doUpload)) {
+        sessionStorage.doUpload = false;
         $("#levels").hide();
         $("#upload_info").show();
 
@@ -499,8 +502,20 @@ $(document).ready(function () {
                 Accept: 'application/json'
             },
             data: {
-                image: localStorage.imageBase64,
+                image: sessionStorage.imageBase64,
                 type: 'base64'
+            },
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                //Upload progress
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percent_complete = evt.loaded / evt.total;
+                        //Do something with upload progress
+                        $("#upload_percent").text((percent_complete * 100).toFixed(2) + "%");
+                    }
+                }, false);
+                return xhr;
             },
             success: function (result) {
                 var id = result.data.id;
