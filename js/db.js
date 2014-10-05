@@ -1,5 +1,6 @@
-﻿var image_size = 128;
-var border_size = 6;
+﻿var imageSize = 128;
+var borderSize = 6;
+var scoreTypeFontSize = 24;
 
 var pressTimer;
 
@@ -257,7 +258,7 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                 break;
         }
 
-        elem_dom.append("<canvas class='song_img' height='" + (image_size + border_size * 2) + "' width='" + (image_size + border_size * 2) + "'> </canvas>");
+        elem_dom.append("<canvas class='song_img' height='" + (imageSize + borderSize * 2) + "' width='" + (imageSize + borderSize * 2) + "'> </canvas>");
         var canvas_dom = elem_dom.find("canvas").last();
 
         var image_obj = new Image();
@@ -267,10 +268,10 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                 canvas_dom.drawImage({
                     source: image_obj,
                     opacity: 1,
-                    x: border_size,
-                    y: border_size,
-                    width: image_size,
-                    height: image_size,
+                    x: borderSize,
+                    y: borderSize,
+                    width: imageSize,
+                    height: imageSize,
                     fromCenter: false,
                     layer: true,
                     name: 'song_img',
@@ -299,10 +300,10 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                 canvas_dom.drawImage({
                     source: image_obj,
                     opacity: opacity,
-                    x: border_size,
-                    y: border_size,
-                    width: image_size,
-                    height: image_size,
+                    x: borderSize,
+                    y: borderSize,
+                    width: imageSize,
+                    height: imageSize,
                     fromCenter: false,
                     layer: true,
                     name: 'song_img',
@@ -442,8 +443,8 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
 
             canvas_dom.drawText({
                 fillStyle: '#9cf',
-                x: border_size, y: border_size,
-                maxWidth: image_size,
+                x: borderSize, y: borderSize,
+                maxWidth: imageSize,
                 fromCenter: false,
                 fontSize: 14,
                 fontFamily: 'Verdana, sans-serif, 微軟正黑體',
@@ -458,11 +459,11 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                 strokeStyle: 'rgb(0,0,255)',
                 fontStyle: 'bold',
                 strokeWidth: 1,
-                x: border_size + image_size - 2,
-                y: border_size + 10,
-                // x: border_size + image_size/2, y: border_size + image_size/2,
+                x: borderSize + imageSize - 2,
+                y: borderSize + 2 + scoreTypeFontSize / 3,
+                // x: borderSize + imageSize/2, y: borderSize + imageSize/2,
                 // fromCenter: true,
-                fontSize: 24,
+                fontSize: scoreTypeFontSize,
                 fontFamily: 'Consolas, Verdana, sans-serif, 微軟正黑體',
                 align: 'right',
                 respectAlign: true,
@@ -623,6 +624,68 @@ function loadFromFB() {
 }
 
 /**********************************************************
+ * Customize function
+ **********************************************************/
+function resetSongs() {
+    $(".score_div").remove();
+    appendSongsByLevel(15);
+    appendSongsByLevel(16);
+    appendByScore(100);
+    appendByScore(-100);
+}
+
+function openCustomize() {
+    var window_width = $(window).width();
+    var window_height = $(window).height();
+    var score_style_font_size_spinner = $("#score_style_font_size").spinner();
+    score_style_font_size_spinner.spinner("value", scoreTypeFontSize);
+    var image_size_spinner = $("#image_size").spinner();
+    image_size_spinner.spinner("value", imageSize);
+    var border_size_spinner = $("#border_size").spinner();
+    border_size_spinner.spinner("value", borderSize);
+    $("#customize_dialog").dialog({
+        closeOnEscape: true,
+        draggable: false,
+        modal: true,
+        width: window_width * 0.8,
+        height: window_height * 0.8,
+        maxHeight: window_height * 0.8,
+        title: "Options",
+        position: { my: "center top", at: "center top+10%", of: window },
+        buttons: {
+            "儲存": function() {
+                var font_size = score_style_font_size_spinner.spinner("value");
+                localStorage.setItem("score_type_font_size", font_size);
+                scoreTypeFontSize = font_size;
+                var image_size = image_size_spinner.spinner("value");
+                localStorage.setItem("imageSize", image_size);
+                imageSize = image_size;
+                var border_size = border_size_spinner.spinner("value");
+                localStorage.setItem("border_size", border_size);
+                borderSize = border_size;
+
+                resetSongs();
+                $(this).dialog("close");
+            },
+            "回到預設": function () {
+                score_style_font_size_spinner.spinner("value", 24);
+                image_size_spinner.spinner("value", 128);
+                border_size_spinner.spinner("value", 6);
+            },
+            "取消": function() {
+                $(this).dialog("close");
+            }
+        },
+        close: function(event, ui) {
+            $('#wrap').show(); $("body").removeClass("no_scroll");
+        },
+        open: function (event, ui) { $('.ui-widget-overlay').bind('click', function () { $("#customize_dialog").dialog('close'); }); $("body").addClass("no_scroll"); },
+        show: { effect: "blind", duration: 500 },
+        hide: { effect: "blind", duration: 500 }
+    });
+}
+
+/**********************************************************
  * Document ready function
  **********************************************************/
 $(document).ready(function () {
@@ -630,6 +693,14 @@ $(document).ready(function () {
     if (localStorage.length == 0) {
         resetLocalStorage();
     }
+
+    // 更新 settings
+    if (localStorage.getItem("imageSize") != undefined)
+        imageSize = parseInt(localStorage.getItem("imageSize"));
+    if (localStorage.getItem("borderSize") != undefined)
+        borderSize = parseInt(localStorage.getItem("borderSize"));
+    if (localStorage.getItem("score_type_font_size") != undefined)
+        scoreTypeFontSize = parseInt(localStorage.getItem("score_type_font_size"));
 
     // get localStorage
     var rec = $.url().param("rec");
@@ -651,6 +722,8 @@ $(document).ready(function () {
     $("#download_as_png").on("click", downloadAsPng);
     $("#clear_all_btn").on("click", clearAll);
     $("#upload_to_imgur").on("click", uploadToImgur);
+
+    $("#customize").on("click", openCustomize);
 
     $('#song_info_popup').popup({
         blur: false,

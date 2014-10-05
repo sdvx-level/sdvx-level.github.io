@@ -4,7 +4,7 @@
     color: white;
 }
 
-.ui-widget {
+.ui-widget, .ui-widget button, .ui-widget input {
     font-family: Consolas, 微軟正黑體;
 }
 

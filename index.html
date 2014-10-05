@@ -34,6 +34,7 @@
         <br />
         <label><input type="checkbox" id="switch_click" />點燈方式</label>
         <a href="index_m.html">Mobile Version</a>
+        <input type="button" id="customize" value="設定" />
         <!--
             <div id="facebook_logged_in" style="display: none;">
                 <input type="button" id="save_with_fb" value="Save with FB" />
@@ -67,6 +68,19 @@
             <button class="song_info_popup_close">關閉</button>
         </div>
         
+        <!-- Option dialog -->
+        <div id="customize_dialog">
+            <label for="score_style_font_size">評價字體大小:</label>
+            <input id="score_style_font_size">
+            <br />
+            <label for="image_size">歌曲圖片大小:</label>
+            <input id="image_size">
+            <br />
+            <label for="border_size">歌曲邊框大小:</label>
+            <input id="border_size">
+            <h2>注意！修改設定後歌曲資料會重新繪製，請務必先儲存歌曲資料！！</h2>
+        </div>
+        
         <!-- Information dialog -->
         <div id="information">
             <div id="tabs">
@@ -92,6 +106,7 @@
                                 <li>新增公告視窗</li>
                                 <li>原本資料儲存方式設計有誤，一但新增新的歌曲會弄亂資料，因此而修改資料儲存方式</li>
                                 <li>改變產生連結方式</li>
+                                <li>新增設定功能</li>
                             </ul>
                         </div>
                     </div>
