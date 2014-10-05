@@ -10,6 +10,7 @@
         }
     </script>
     <script src="js/jquery-2.1.1.min.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
     <script src="js/jcanvas.min.js"></script>
     <script src="js/jquery.popupoverlay.js"></script>
     <script src="js/taffy-min.js"></script>
@@ -17,21 +18,31 @@
     <script src="js/db.js"></script>
     <script src="js/html2canvas.js"></script>
     <script src="js/purl.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css" />
     <link rel="stylesheet" type="text/css" href="css/style.css" />
 </head>
     <body>
-        <!--
-            <h1>Level 16</h1>
-            <div id="level16"></div>
-            <hr/>
-            -->
+        <input type="button" id="save_to_browser" value="儲存至瀏覽器" />
+        <input type="button" id="load_from_browser" value="從瀏覽器讀取" />
+        <input type="button" id="generate_link" value="產生連結" />
+        <br />
         <input type="button" id="download_as_png" value="Save as PNG" />
         <input type="button" id="upload_to_imgur" value="上傳到 imgur" />
         <input type="button" id="clear_all_btn" value="Clear ALL" />
-        <label><input type="checkbox" id="switch_click"/>點燈方式</label>
-        <a href="index_m.html">Mobile Version</a>
         <br />
         <input type="text" id="link" size="100" />
+        <br />
+        <label><input type="checkbox" id="switch_click" />點燈方式</label>
+        <a href="index_m.html">Mobile Version</a>
+        <!--
+            <div id="facebook_logged_in" style="display: none;">
+                <input type="button" id="save_with_fb" value="Save with FB" />
+                <input type="button" id="load_from_fb" value="Load from FB" />
+            </div>
+            <fb:login-button autologoutlink="true" scope="public_profile" onlogin="checkLoginState();">
+            </fb:login-button>
+            <span id="facebook_status"></span>
+            -->
         <div id="filters">
             <!-- <input type="checkbox" id="short_btn_filter" /><label for="short_btn_filter">Short Score</label> -->
         </div>
@@ -54,6 +65,46 @@
             <div id="song_info_text" class="song_info_text"></div>
             <!-- Add an optional button to close the popup -->
             <button class="song_info_popup_close">關閉</button>
+        </div>
+        
+        <!-- Information dialog -->
+        <div id="information">
+            <div id="tabs">
+                <ul>
+                    <li><a href="#announcements">Announcements</a></li>
+                    <li><a href="#updates">Updates</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#links">Other Links</a></li>
+                </ul>
+                <div id="announcements">
+                    <ul>
+                        <li>由於資料儲存方式有更改，舊有資料可能無法直接使用到本次更新，如果有發生圖片顯示問題或資料問題請用 Clear ALL 清除資料後再重新使用。</li>
+                        <li>儲存方式改為「手動」，不再是以前的自動儲存，請大家注意使用。</li>
+                        <li>詳細更新資訊請參考 Updates</li>
+                        <li>問題回報、建議提供歡迎使用 Twitter、Github 連結，或 sdvx.sheet@gmail.com 寄信 :)</li>
+                    </ul>
+                </div>
+                <div id="updates">
+                    <div id="updates_accordion">
+                        <h3>2014.10.06</h3>
+                        <div>
+                            <ul>
+                                <li>新增公告視窗</li>
+                                <li>原本資料儲存方式設計有誤，一但新增新的歌曲會弄亂資料，因此而修改資料儲存方式</li>
+                                <li>改變產生連結方式</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div id="faq">暫時沒有資料</div>
+                <div id="links">
+                    <ul>
+                        <li><a href="http://sdvx-sheet.github.io">SDVX 譜面播放器</a></li>
+                        <li><a href="https://twitter.com/sdvx_sheet">Twitter</a></li>
+                        <li><a href="https://github.com/sdvx-level/sdvx-level.github.io">Github</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </body>
 </html>

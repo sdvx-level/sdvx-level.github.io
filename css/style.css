@@ -4,6 +4,10 @@
     color: white;
 }
 
+.ui-widget {
+    font-family: Consolas, 微軟正黑體;
+}
+
 #levels {
     background-color: #222222;
     color: white;
@@ -101,4 +105,8 @@
 
 a {
     color: white;
+}
+
+.no_scroll {
+    overflow: hidden;
 }

@@ -3,62 +3,199 @@ var border_size = 6;
 
 var pressTimer;
 
-function saveToLocalStorage() {
-    $(".elem").each(function (i) {
-        var music_value = $(this).data("music-value");
-        if ($(this).hasClass("song_clear_c"))
-            setLocalStorage(music_value, 0, "1");
-        else if($(this).hasClass("song_clear_hc"))
-            setLocalStorage(music_value, 0, "2");
-        else if($(this).hasClass("song_clear_uc"))
-            setLocalStorage(music_value, 0, "3");
-        else if ($(this).hasClass("song_clear_puc"))
-            setLocalStorage(music_value, 0, "4");
-        else
-            setLocalStorage(music_value, 0, "0");
+// LZW-compress a string
+function lzwEncode(s) {
+    var dict = {};
+    var data = (s + "").split("");
+    var out = [];
+    var curr_char;
+    var phrase = data[0];
+    var code = 256;
+    var i;
+    for (i = 1; i < data.length; i++) {
+        curr_char = data[i];
+        if (dict[phrase + curr_char] != null) {
+            phrase += curr_char;
+        }
+        else {
+            out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+            dict[phrase + curr_char] = code;
+            code++;
+            phrase = curr_char;
+        }
+    }
+    out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+    for (i = 0; i < out.length; i++) {
+        out[i] = String.fromCharCode(out[i]);
+    }
+    return out.join("");
+}
+
+// Decompress an LZW-encoded string
+function lzwDecode(s) {
+    var dict = {};
+    var data = (s + "").split("");
+    var curr_char = data[0];
+    var old_phrase = curr_char;
+    var out = [curr_char];
+    var code = 256;
+    var phrase;
+    for (var i = 1; i < data.length; i++) {
+        var curr_code = data[i].charCodeAt(0);
+        if (curr_code < 256) {
+            phrase = data[i];
+        }
+        else {
+            phrase = dict[curr_code] ? dict[curr_code] : (old_phrase + curr_char);
+        }
+        out.push(phrase);
+        curr_char = phrase.charAt(0);
+        dict[code] = old_phrase + curr_char;
+        code++;
+        old_phrase = phrase;
+    }
+    return out.join("");
+}
+
+/**********************************************************
+ * Local Storage functions START
+ **********************************************************/
+function getLocalStorage(key, index) {
+    var result = "";
+    try {
+        result = JSON.parse(localStorage.getItem("rec"))[key][index];
+    } catch (err) {
+        return "";
+    }
+    return result;
+}
+
+function setLocalStorage(key, index, value) {
+    var original_value = JSON.parse(localStorage.getItem("rec")) || {};
+    if (original_value[key] == undefined) original_value[key] = [];
+    original_value[key][index] = value;
+    localStorage.setItem("rec", JSON.stringify(original_value));
+}
+
+song_clear_list = ["", "song_clear_c", "song_clear_hc", "song_clear_uc", "song_clear_puc"];
+song_type_list = ["", "B", "A", "AA", "AAA"];
+
+function clearClassToValue(elem) {
+    for (var i = 1; i < song_clear_list.length; i++) {
+        if (elem.hasClass(song_clear_list[i])) return i;
+    }
+    return 0;
+}
+
+function typeLayerToValue(canvas) {
+    for (var i = 0; i < song_type_list.length; i++) {
+        if (canvas.getLayer('clear_style').text == song_type_list[i]) return i;
+    }
+    return 0;
+}
+
+function setClearByValue(elem, clear_type) {
+    for (var i = 1; i < song_clear_list.length; i++) {
+        elem.removeClass(song_clear_list[i]);
+    }
+    if (clear_type == 0) {
+        elem.find("canvas").setLayer("song_img", { opacity: 0.2 }).drawLayers();
+    } else {
+        elem.find("canvas").setLayer("song_img", { opacity: 1 }).drawLayers();
+        elem.addClass(song_clear_list[clear_type]);
+    }
+}
+
+function setTypeByValue(canvas, score_type) {
+    var visible = (score_type != 0);
+    canvas.setLayer('clear_style', {
+        visible: visible,
+        text: song_type_list[score_type]
     });
+}
+
+function saveToLocalStorage() {
+    var dict = {};
+    $(".elem").each(function() {
+        var id = $(this).data("music-id");
+        var value = [];
+        value[0] = clearClassToValue($(this)).toString();
+        value[1] = typeLayerToValue($(this).find("canvas")).toString();
+        dict[id] = value;
+    });
+    localStorage.setItem("rec", JSON.stringify(dict));
+}
+
+function loadFromLocalStorage() {
+    var dict = JSON.parse(localStorage.getItem("rec"));
+    $(".elem").each(function() {
+        var id = $(this).data("music-id");
+        setClearByValue($(this), dict[id][0]);
+        setTypeByValue($(this).find("canvas"), dict[id][1]);
+    });
+}
+
+function clearAll() {
+    $(".elem").each(function () {
+        $(this).removeClass("song_clear_c");
+        $(this).removeClass("song_clear_hc");
+        $(this).removeClass("song_clear_uc");
+        $(this).removeClass("song_clear_puc");
+        $(this).find("canvas").setLayer("clear_style", {
+            visible: false,
+            text: ""
+        });
+        $(this).find("canvas").setLayer("song_img", { opacity: 0.2 }).drawLayers();
+    });
+    localStorage.clear();
+    resetLocalStorage();
     updateLink();
 }
 
-function readFromLocalStorage() {
-    $(".elem").each(function(i) {
-        var music_value = $(this).data("music-value");
-        if (getLocalStorage(music_value, 0) == "1") {
-        // if (localStorage.getItem(music_value) == "1") {
-            $(this).addClass("elem_background");
-            $(this).find("canvas").setLayer('song_img', { opacity: 1 }).drawLayers();
-        } else {
-            $(this).removeClass("elem_background");
-            $(this).find("canvas").setLayer('song_img', { opacity: 0.2 }).drawLayers();
-        }
+function resetLocalStorage() {
+    var dict = {};
+    var db_result = music_db().order("id asec");
+    db_result.each(function (entry) {
+        dict[entry.id] = ["0", "0"];
     });
+    localStorage.setItem("rec", JSON.stringify(dict));
 }
 
+/**********************************************************
+ * Link functions
+ **********************************************************/
 function updateLink() {
     var text = "?rec=";
+    /*
     for (var i = 0; i < localStorage.length; ++i) {
         text += getLocalStorage(localStorage.key(i), 0) + "," + getLocalStorage(localStorage.key(i), 1) + "|";
-        // text += localStorage.getItem(localStorage.key(i)) + ",";
     }
     text = text.substring(0, text.length - 1);
+    text = $.url().attr("host") + $.url().attr("path") + text;
+    */
+    var dict = {};
+    $(".elem").each(function () {
+        var id = $(this).data("music-id");
+        var value = [];
+        value[0] = clearClassToValue($(this)).toString();
+        value[1] = typeLayerToValue($(this).find("canvas")).toString();
+        dict[id] = value;
+    });
+    text += lzwEncode(JSON.stringify(dict));
     text = $.url().attr("host") + $.url().attr("path") + text;
     $("#link").val(text);
 }
 
+/**********************************************************
+ * Utilities
+ **********************************************************/
 function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function getLocalStorage(key, index) {
-    return JSON.parse(localStorage.getItem(key) || "[]")[index];
-}
-
-function setLocalStorage(key, index, value) {
-    var original_value = JSON.parse(localStorage.getItem(key) || "[]");
-    original_value[index] = value;
-    localStorage.setItem(key, JSON.stringify(original_value));
-}
-
+/**********************************************************
+ * Element generation functions
+ **********************************************************/
 function appendSongsByDbResult(db_result, div_dom, header_text) {
     // append new row
     div_dom.append("<div class='score_div score_div_no_bottom'><div class='left_div'></div><div class='right_div'></div></div>");
@@ -68,9 +205,9 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
     var div_right_dom = div_dom.find(".right_div").last();
     db_result.each(function (entry) {
         // append new div and song
-        div_right_dom.append("<div class='elem' data-music-value=\"" + entry.value + " " + entry.type + "\"></div>");
+        div_right_dom.append("<div class='elem' data-music-id='" + entry.id + "'></div>");
         var elem_dom = div_right_dom.find("div").last();
-        var key = entry.value + " " + entry.type;
+        var key = entry.id;
 
         // red localStorage & set opacity
         var opacity = 1;
@@ -219,46 +356,42 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                         // 根據點燈方式做不同的點燈效果
                         var clear_state;
                         if ($("#switch_click").prop("checked") == false) {      // Clear 點燈
-                            // get current state
-                            clear_state = getLocalStorage(key, 0);
+                            // get current state by class
+                            clear_state = clearClassToValue($(this).parent());
+                            // clear_state = getLocalStorage(key, 0);
                             $(this).parent().removeClass("song_clear_c");
                             $(this).parent().removeClass("song_clear_hc");
                             $(this).parent().removeClass("song_clear_uc");
                             $(this).parent().removeClass("song_clear_puc");
                             switch (clear_state) {
-                            case "0":
+                            case 0:
                                 $(this).setLayer('song_img', {
                                     opacity: 1
                                 }).drawLayers();
                                 $(this).parent().addClass("song_clear_c");
-                                setLocalStorage(key, 0, "1");
                                 break;
-                            case "1":
+                            case 1:
                                 $(this).setLayer('song_img', {
                                     opacity: 1
                                 }).drawLayers();
                                 $(this).parent().addClass("song_clear_hc");
-                                setLocalStorage(key, 0, "2");
                                 break;
-                            case "2":
+                            case 2:
                                 $(this).setLayer('song_img', {
                                     opacity: 1
                                 }).drawLayers();
                                 $(this).parent().addClass("song_clear_uc");
-                                setLocalStorage(key, 0, "3");
                                 break;
-                            case "3":
+                            case 3:
                                 $(this).setLayer('song_img', {
                                     opacity: 1
                                 }).drawLayers();
                                 $(this).parent().addClass("song_clear_puc");
-                                setLocalStorage(key, 0, "4");
                                 break;
-                            case "4":
+                            case 4:
                                 $(this).setLayer('song_img', {
                                     opacity: 0.2
                                 }).drawLayers();
-                                setLocalStorage(key, 0, "0");
                                 break;
                             }
                         } else {    // 分數點燈
@@ -339,7 +472,8 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                 text: clear_text
             });
         }
-        image_obj.src = "img/" + key + ".png";
+        var value = entry.value + " " + entry.type;
+        image_obj.src = "img/" + value + ".png";
     });
 }
 
@@ -371,6 +505,9 @@ function appendByScore(score) {
     div_dom.find(".score_div").last().removeClass("score_div_no_bottom");
 }
 
+/**********************************************************
+ * Pictures Download & Upload
+ **********************************************************/
 function b64toBlob(b64_data, content_type, slice_size) {
     content_type = content_type || '';
     slice_size = slice_size || 512;
@@ -428,31 +565,66 @@ function uploadToImgur() {
     });
 }
 
-function clearAll() {
-    $(".elem").each(function () {
-        $(this).removeClass("song_clear_c");
-        $(this).removeClass("song_clear_hc");
-        $(this).removeClass("song_clear_uc");
-        $(this).removeClass("song_clear_puc");
-        $(this).find("canvas").setLayer("clear_style", {
-            visible: false
+/**********************************************************
+ * Facebook APIs
+ **********************************************************/
+function facebookInit() {
+    window.fbAsyncInit = function () {
+        FB.init({
+            appId: '815480455168959',
+            xfbml: true,
+            version: 'v2.1'
         });
-        $(this).find("canvas").setLayer("song_img", { opacity: 0.2 }).drawLayers();
-    });
-    localStorage.clear();
-    resetLocalStorage();
-    updateLink();
+    };
+
+    (function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) { return; }
+        js = d.createElement(s); js.id = id;
+        js.src = "//connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
 }
 
-function resetLocalStorage() {
-    var db_result = music_db();
-    db_result.each(function (entry) {
-        var key = entry.value + " " + entry.type;
-        setLocalStorage(key, 0, "0");
-        setLocalStorage(key, 1, "0");
+function statusChangeCallback(response) {
+    if (response.status === 'connected') {
+        // Logged into your app and Facebook.
+        $("#facebook_status").html("登入成功，讀取資料中...");
+        sessionStorage.fb_token = response.authResponse.accessToken;
+        FB.api('/me', function (res) {
+            $("#facebook_status").html("已用 " + res.name + " 帳號登入");
+            sessionStorage.fb_id = res.id;
+            $("#facebook_logged_in").show();
+        });
+    } else if (response.status === 'not_authorized') {
+        // The person is logged into Facebook, but not your app.
+        $("#facebook_status").html("請認證此網站");
+        $("#facebook_logged_in").hide();
+    } else {
+        // The person is not logged into Facebook, so we're not sure if
+        // they are logged into this app or not.
+        $("#facebook_status").html("請登入 Facebook");
+        $("#facebook_logged_in").hide();
+    }
+}
+
+function checkLoginState() {
+    FB.getLoginStatus(function (response) {
+        statusChangeCallback(response);
     });
 }
 
+function saveWithFB() {
+
+}
+
+function loadFromFB() {
+
+}
+
+/**********************************************************
+ * Document ready function
+ **********************************************************/
 $(document).ready(function () {
     // flush localStorage
     if (localStorage.length == 0) {
@@ -462,13 +634,8 @@ $(document).ready(function () {
     // get localStorage
     var rec = $.url().param("rec");
     if (rec != undefined) {
-        var parsed_rec = rec.split("|");
-        for (var index in parsed_rec) {
-            var arr = parsed_rec[index].split(",");
-            setLocalStorage(localStorage.key(index), 0, arr[0]);
-            setLocalStorage(localStorage.key(index), 1, arr[1]);
-        }
-        updateLink();
+        var parsed_rec = lzwDecode(rec);
+        localStorage.setItem("rec", parsed_rec);
     }
 
     // append level 15 songs
@@ -476,6 +643,10 @@ $(document).ready(function () {
     appendSongsByLevel(16);
     appendByScore(100);
     appendByScore(-100);
+
+    $("#save_to_browser").on("click", saveToLocalStorage);
+    $("#load_from_browser").on("click", loadFromLocalStorage);
+    $("#generate_link").on("click", updateLink);
 
     $("#download_as_png").on("click", downloadAsPng);
     $("#clear_all_btn").on("click", clearAll);
@@ -523,4 +694,31 @@ $(document).ready(function () {
             }
         });
     }
+
+    // 設定 FB 按鈕
+    $("#save_with_fb").on("click", saveWithFB);
+    $("#load_from_fb").on("click", loadFromFB);
+
+
+    var window_width = $(window).width();
+    var window_height = $(window).height();
+    $("#tabs").tabs();
+    $("#updates_accordion").accordion({
+        heightStyle: "content"
+    });
+    // 跳出 infomation 視窗
+    $("#information").dialog({
+        closeOnEscape: true,
+        draggable: false,
+        modal: true,
+        width: window_width * 0.8,
+        height: window_height * 0.8,
+        maxHeight: window_height * 0.8,
+        title: "Information",
+        position: { my: "center top", at: "center top+10%", of: window },
+        close: function(event, ui) { $('#wrap').show(); $("body").removeClass("no_scroll"); },
+        open: function(event, ui) { $('.ui-widget-overlay').bind('click', function(){ $("#information").dialog('close'); }); $("body").addClass("no_scroll"); },
+        show: { effect: "blind", duration: 500 },
+        hide: { effect: "blind", duration: 500 }
+    });
 });
