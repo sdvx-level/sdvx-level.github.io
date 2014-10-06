@@ -635,54 +635,7 @@ function resetSongs() {
 }
 
 function openCustomize() {
-    var window_width = $(window).width();
-    var window_height = $(window).height();
-    var score_style_font_size_spinner = $("#score_style_font_size").spinner();
-    score_style_font_size_spinner.spinner("value", scoreTypeFontSize);
-    var image_size_spinner = $("#image_size").spinner();
-    image_size_spinner.spinner("value", imageSize);
-    var border_size_spinner = $("#border_size").spinner();
-    border_size_spinner.spinner("value", borderSize);
-    $("#customize_dialog").dialog({
-        closeOnEscape: true,
-        draggable: false,
-        modal: true,
-        width: window_width * 0.8,
-        height: window_height * 0.8,
-        maxHeight: window_height * 0.8,
-        title: "Options",
-        position: { my: "center top", at: "center top+10%", of: window },
-        buttons: {
-            "儲存": function() {
-                var font_size = score_style_font_size_spinner.spinner("value");
-                localStorage.setItem("score_type_font_size", font_size);
-                scoreTypeFontSize = font_size;
-                var image_size = image_size_spinner.spinner("value");
-                localStorage.setItem("imageSize", image_size);
-                imageSize = image_size;
-                var border_size = border_size_spinner.spinner("value");
-                localStorage.setItem("border_size", border_size);
-                borderSize = border_size;
-
-                resetSongs();
-                $(this).dialog("close");
-            },
-            "回到預設": function () {
-                score_style_font_size_spinner.spinner("value", 24);
-                image_size_spinner.spinner("value", 128);
-                border_size_spinner.spinner("value", 6);
-            },
-            "取消": function() {
-                $(this).dialog("close");
-            }
-        },
-        close: function(event, ui) {
-            $('#wrap').show(); $("body").removeClass("no_scroll");
-        },
-        open: function (event, ui) { $('.ui-widget-overlay').bind('click', function () { $("#customize_dialog").dialog('close'); }); $("body").addClass("no_scroll"); },
-        show: { effect: "blind", duration: 500 },
-        hide: { effect: "blind", duration: 500 }
-    });
+    $("#customize_dialog").dialog("open");
 }
 
 /**********************************************************
@@ -791,6 +744,54 @@ $(document).ready(function () {
         position: { my: "center top", at: "center top+10%", of: window },
         close: function(event, ui) { $('#wrap').show(); $("body").removeClass("no_scroll"); },
         open: function(event, ui) { $('.ui-widget-overlay').bind('click', function(){ $("#information").dialog('close'); }); $("body").addClass("no_scroll"); },
+        show: { effect: "blind", duration: 500 },
+        hide: { effect: "blind", duration: 500 }
+    });
+    // 設定 setting dialog
+    var score_style_font_size_spinner = $("#score_style_font_size").spinner();
+    score_style_font_size_spinner.spinner("value", scoreTypeFontSize);
+    var image_size_spinner = $("#image_size").spinner();
+    image_size_spinner.spinner("value", imageSize);
+    var border_size_spinner = $("#border_size").spinner();
+    border_size_spinner.spinner("value", borderSize);
+    $("#customize_dialog").dialog({
+        autoOpen: false,
+        closeOnEscape: true,
+        draggable: false,
+        modal: true,
+        width: window_width * 0.8,
+        height: window_height * 0.8,
+        maxHeight: window_height * 0.8,
+        title: "Options",
+        position: { my: "center top", at: "center top+10%", of: window },
+        buttons: {
+            "儲存": function () {
+                var font_size = score_style_font_size_spinner.spinner("value");
+                localStorage.setItem("score_type_font_size", font_size);
+                scoreTypeFontSize = font_size;
+                var image_size = image_size_spinner.spinner("value");
+                localStorage.setItem("imageSize", image_size);
+                imageSize = image_size;
+                var border_size = border_size_spinner.spinner("value");
+                localStorage.setItem("border_size", border_size);
+                borderSize = border_size;
+
+                resetSongs();
+                $(this).dialog("close");
+            },
+            "回到預設": function () {
+                score_style_font_size_spinner.spinner("value", 24);
+                image_size_spinner.spinner("value", 128);
+                border_size_spinner.spinner("value", 6);
+            },
+            "取消": function () {
+                $(this).dialog("close");
+            }
+        },
+        close: function (event, ui) {
+            $('#wrap').show(); $("body").removeClass("no_scroll");
+        },
+        open: function (event, ui) { $('.ui-widget-overlay').bind('click', function () { $("#customize_dialog").dialog('close'); }); $("body").addClass("no_scroll"); },
         show: { effect: "blind", duration: 500 },
         hide: { effect: "blind", duration: 500 }
     });
