@@ -69,7 +69,7 @@ function getLocalStorage(key, index) {
     try {
         result = JSON.parse(localStorage.getItem("rec"))[key][index];
     } catch (err) {
-        return "";
+        return "0";
     }
     return result;
 }
