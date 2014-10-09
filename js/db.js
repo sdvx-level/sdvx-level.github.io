@@ -134,6 +134,9 @@ function loadFromLocalStorage() {
     var dict = JSON.parse(localStorage.getItem("rec"));
     $(".elem").each(function() {
         var id = $(this).data("music-id");
+        if (dict[id] == undefined || dict[id] == null) {
+            dict[id] = ["0", "0"];
+        }
         setClearByValue($(this), dict[id][0]);
         setTypeByValue($(this).find("canvas"), dict[id][1]);
     });
@@ -151,7 +154,7 @@ function clearAll() {
         });
         $(this).find("canvas").setLayer("song_img", { opacity: 0.2 }).drawLayers();
     });
-    localStorage.clear();
+    localStorage.removeItem("rec");
     resetLocalStorage();
     updateLink();
 }
@@ -587,6 +590,8 @@ function openCustomize() {
  * Account function
  **********************************************************/
 function saveToAccount() {
+    $("#save_load_dialog").html("儲存中...");
+    $("#save_load_dialog").dialog("open");
     var dict = {};
     $(".elem").each(function () {
         var id = $(this).data("music-id");
@@ -607,10 +612,13 @@ function saveToAccount() {
         if (data.status == 0) {
         } else  {
         }
+        $("#save_load_dialog").dialog("close");
     }, "json");
 }
 
 function loadFromAccount() {
+    $("#save_load_dialog").html("讀取中...");
+    $("#save_load_dialog").dialog("open");
     var username = localStorage.getItem("username");
     var password = localStorage.getItem("password");
     $.post(phpHost + "get_rec.php", {
@@ -621,11 +629,15 @@ function loadFromAccount() {
             var dict = JSON.parse(data.rec);
             $(".elem").each(function () {
                 var id = $(this).data("music-id");
+                if (dict[id] == undefined || dict[id] == null) {
+                    dict[id] = ["0", "0"];
+                }
                 setClearByValue($(this), dict[id][0]);
                 setTypeByValue($(this).find("canvas"), dict[id][1]);
             });
         } else {
         }
+        $("#save_load_dialog").dialog("close");
     }, "json");
 }
 
@@ -636,6 +648,8 @@ function logout() {
     $("#logout").hide();
     $("#vote").hide();
     $("#signup").show();
+    $("#save_to_account").hide();
+    $("#load_from_account").hide();
     not_logged_info();
 }
 
@@ -645,6 +659,8 @@ function login_success(username) {
     $("#logout").show();
     $("#signup").hide();
     $("#vote").show();
+    $("#save_to_account").show();
+    $("#load_from_account").show();
 }
 
 function login() {
@@ -680,6 +696,14 @@ function login() {
             } else if (data.status == -2) {
                 password_dom.addClass("ui-state-error");
                 updateTips("密碼錯誤");
+            } else if (data.status == -3) {
+                username_dom.addClass("ui-state-error");
+                updateTips("帳號格式錯誤");
+            } else if (data.status == -4) {
+                password_dom.addClass("ui-state-error");
+                updateTips("密碼格式錯誤");
+            } else {
+                updateTips("不知名的錯誤");
             }
         }, "json");
     }
@@ -706,9 +730,17 @@ function signup() {
         }, function (data) {
             if (data.status == 0) {
                 $("#signup_dialog").dialog("close");
-            } else {
+            } else if (data.status == -1) {
                 username_dom.addClass("ui-state-error");
                 updateTips("帳號已經被使用");
+            } else if (data.status == -2) {
+                username_dom.addClass("ui-state-error");
+                updateTips("帳號格式不合法");
+            } else if (data.status == -3) {
+                password_dom.addClass("ui-state-error");
+                updateTips("密碼格式不合法");
+            } else {
+                updateTips("不知名的錯誤");
             }
         }, "json");
     }
@@ -755,9 +787,11 @@ function checkRegexp(o, regexp, n) {
 
 function init_account() {
     $("#login").button();
-    $("#logout").button().hide();
+    $("#logout").button().hide().on("click", logout);
     $("#signup").button();
-    $("#vote").button().hide();
+    $("#vote").button().hide().on("click", function () { window.location = "vote.html"; });
+    $("#save_to_account").button().hide().on("click", saveToAccount);
+    $("#load_from_account").button().hide().on("click", loadFromAccount);
 
     if (localStorage.getItem("username") != null && localStorage.getItem("password") != null) {
         // try to login
@@ -834,11 +868,15 @@ function init_account() {
         login_dialog.dialog("open");
     });
 
-    // logout button
-    $("#logout").button().on("click", logout);
-
-    // vote button
-    $("#vote").button().on("click", function() { window.location = "vote.html"; });
+    // Save/Load dialog
+    var save_load_dialog = $("#save_load_dialog").dialog({
+        autoOpen: false,
+        height: 300,
+        width: 300,
+        modal: true,
+        show: { effect: "blind", duration: 500 },
+        hide: { effect: "blind", duration: 500 }
+    });
 }
 
 
