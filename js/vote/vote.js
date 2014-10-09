@@ -1,6 +1,9 @@
 ﻿var imageSize = 128;
 var borderSize = 6;
 
+// var phpHost = "http://sdvxlevel.host-ed.me/";
+var phpHost = "http://sdvxlevel.lionfree.net/";
+
 function appendSongsByDbResult(db_result, div_dom, header_text) {
     // append new row
     div_dom.append("<div class='score_div score_div_no_bottom' data-music-score='-100'><div class='right_div'></div></div>");
@@ -75,7 +78,7 @@ function saveToAccount() {
     var vote = JSON.stringify(dict);
     var username = localStorage.getItem("username");
     var password = localStorage.getItem("password");
-    $.post("http://sdvxlevel.lionfree.net/put_vote.php", {
+    $.post(phpHost + "put_vote.php", {
         "username": username,
         "password": password,
         "vote": vote
@@ -135,7 +138,7 @@ $(document).ready(function () {
     });
 
     // Load user vote state
-    $.post("http://sdvxlevel.lionfree.net/get_vote.php", {
+    $.post(phpHost + "get_vote.php", {
         "username": username,
         "password": password
     }, function (data) {
@@ -144,6 +147,8 @@ $(document).ready(function () {
             $(".elem").each(function () {
                 var id = $(this).data("music-id");
                 var score = dict[id];
+                if (score == undefined)
+                    score = -100;
                 var elem_dom = $(this);
                 $(".score_div[data-music-score=" + score + "]").find(".right_div").append(elem_dom.detach().css({ top: 0, left: 0 }));
             });

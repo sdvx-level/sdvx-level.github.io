@@ -4,6 +4,9 @@ var scoreTypeFontSize = 24;
 
 var pressTimer;
 
+// var phpHost = "http://sdvxlevel.host-ed.me/";
+var phpHost = "http://sdvxlevel.lionfree.net/";
+
 // LZW-compress a string
 function lzwEncode(s) {
     var dict = {};
@@ -596,7 +599,7 @@ function saveToAccount() {
     var username = localStorage.getItem("username");
     var password = localStorage.getItem("password");
 
-    $.post("http://sdvxlevel.lionfree.net/put_rec.php", {
+    $.post(phpHost + "put_rec.php", {
         "username": username,
         "password": password,
         "rec": rec
@@ -610,7 +613,7 @@ function saveToAccount() {
 function loadFromAccount() {
     var username = localStorage.getItem("username");
     var password = localStorage.getItem("password");
-    $.post("http://sdvxlevel.lionfree.net/get_rec.php", {
+    $.post(phpHost + "get_rec.php", {
         "username": username,
         "password": password
     }, function (data) {
@@ -641,6 +644,7 @@ function login_success(username) {
     $("#login").hide();
     $("#logout").show();
     $("#signup").hide();
+    $("#vote").show();
 }
 
 function login() {
@@ -660,7 +664,7 @@ function login() {
     var password = password_dom.val();
 
     if (valid) {
-        $.post("http://sdvxlevel.lionfree.net/login.php", {
+        $.post(phpHost + "login.php", {
             "username": username,
             "password": password
         }, function (data) {
@@ -696,7 +700,7 @@ function signup() {
     valid = valid && checkRegexp(password_dom, /^([0-9a-zA-Z_])+$/, "密碼必須由 0-9, a-z, A-Z 和底線組成，長度在 5 ~ 16 字元之間");
 
     if (valid) {
-        $.post("http://sdvxlevel.lionfree.net/signup.php", {
+        $.post(phpHost + "signup.php", {
             "username": username_dom.val(),
             "password": password_dom.val()
         }, function (data) {
@@ -751,13 +755,14 @@ function checkRegexp(o, regexp, n) {
 
 function init_account() {
     $("#login").button();
-    $("#logout").button();
+    $("#logout").button().hide();
     $("#signup").button();
+    $("#vote").button().hide();
 
     if (localStorage.getItem("username") != null && localStorage.getItem("password") != null) {
         // try to login
         $("#login_status").html("登入中...");
-        $.post("http://sdvxlevel.lionfree.net/login.php", {
+        $.post(phpHost + "login.php", {
             "username": localStorage.getItem("username"),
             "password": localStorage.getItem("password")
         }, function (data) {
