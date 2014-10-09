@@ -112,7 +112,7 @@ function setTypeByValue(canvas, score_type) {
     canvas.setLayer('clear_style', {
         visible: visible,
         text: song_type_list[score_type]
-    });
+    }).drawLayers();
 }
 
 function saveToLocalStorage() {
@@ -565,64 +565,6 @@ function uploadToImgur() {
         }
     });
 }
-
-/**********************************************************
- * Facebook APIs
- **********************************************************/
-function facebookInit() {
-    window.fbAsyncInit = function () {
-        FB.init({
-            appId: '815480455168959',
-            xfbml: true,
-            version: 'v2.1'
-        });
-    };
-
-    (function (d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) { return; }
-        js = d.createElement(s); js.id = id;
-        js.src = "//connect.facebook.net/en_US/sdk.js";
-        fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
-}
-
-function statusChangeCallback(response) {
-    if (response.status === 'connected') {
-        // Logged into your app and Facebook.
-        $("#facebook_status").html("登入成功，讀取資料中...");
-        sessionStorage.fb_token = response.authResponse.accessToken;
-        FB.api('/me', function (res) {
-            $("#facebook_status").html("已用 " + res.name + " 帳號登入");
-            sessionStorage.fb_id = res.id;
-            $("#facebook_logged_in").show();
-        });
-    } else if (response.status === 'not_authorized') {
-        // The person is logged into Facebook, but not your app.
-        $("#facebook_status").html("請認證此網站");
-        $("#facebook_logged_in").hide();
-    } else {
-        // The person is not logged into Facebook, so we're not sure if
-        // they are logged into this app or not.
-        $("#facebook_status").html("請登入 Facebook");
-        $("#facebook_logged_in").hide();
-    }
-}
-
-function checkLoginState() {
-    FB.getLoginStatus(function (response) {
-        statusChangeCallback(response);
-    });
-}
-
-function saveWithFB() {
-
-}
-
-function loadFromFB() {
-
-}
-
 /**********************************************************
  * Customize function
  **********************************************************/
@@ -637,6 +579,263 @@ function resetSongs() {
 function openCustomize() {
     $("#customize_dialog").dialog("open");
 }
+
+/**********************************************************
+ * Account function
+ **********************************************************/
+function saveToAccount() {
+    var dict = {};
+    $(".elem").each(function () {
+        var id = $(this).data("music-id");
+        var value = [];
+        value[0] = clearClassToValue($(this)).toString();
+        value[1] = typeLayerToValue($(this).find("canvas")).toString();
+        dict[id] = value;
+    });
+    var rec = JSON.stringify(dict);
+    var username = localStorage.getItem("username");
+    var password = localStorage.getItem("password");
+
+    $.post("http://sdvxlevel.lionfree.net/put_rec.php", {
+        "username": username,
+        "password": password,
+        "rec": rec
+    }, function (data) {
+        if (data.status == 0) {
+        } else  {
+        }
+    }, "json");
+}
+
+function loadFromAccount() {
+    var username = localStorage.getItem("username");
+    var password = localStorage.getItem("password");
+    $.post("http://sdvxlevel.lionfree.net/get_rec.php", {
+        "username": username,
+        "password": password
+    }, function (data) {
+        if (data.status == 0) {
+            var dict = JSON.parse(data.rec);
+            $(".elem").each(function () {
+                var id = $(this).data("music-id");
+                setClearByValue($(this), dict[id][0]);
+                setTypeByValue($(this).find("canvas"), dict[id][1]);
+            });
+        } else {
+        }
+    }, "json");
+}
+
+function logout() {
+    localStorage.removeItem("username");
+    localStorage.removeItem("password");
+    $("#login").show();
+    $("#logout").hide();
+    $("#vote").hide();
+    $("#signup").show();
+    not_logged_info();
+}
+
+function login_success(username) {
+    $("#login_status").html("歡迎 " + username + " 登入");
+    $("#login").hide();
+    $("#logout").show();
+    $("#signup").hide();
+}
+
+function login() {
+    var valid = true;
+    var username_dom = $("#login_username");
+    var password_dom = $("#login_password");
+    var all_fields = $([]).add(username_dom).add(password_dom);
+    all_fields.removeClass("ui-state-error");
+
+    valid = valid && checkLength(username_dom, "username", 3, 16);
+    valid = valid && checkLength(password_dom, "password", 5, 16);
+
+    valid = valid && checkRegexp(username_dom, /^([0-9a-zA-Z_])+$/i, "帳號必須由 0-9, a-z, A-Z 和底線組成，長度在 3 ~ 16 字元之間");
+    valid = valid && checkRegexp(password_dom, /^([0-9a-zA-Z_])+$/, "密碼必須由 0-9, a-z, A-Z 和底線組成，長度在 5 ~ 16 字元之間");
+
+    var username = username_dom.val();
+    var password = password_dom.val();
+
+    if (valid) {
+        $.post("http://sdvxlevel.lionfree.net/login.php", {
+            "username": username,
+            "password": password
+        }, function (data) {
+            if (data.status == 0) {
+                // 成功登入
+                login_success(username);
+                localStorage.setItem("username", username);
+                localStorage.setItem("password", password);
+                $("#login_dialog").dialog("close");
+            } else if (data.status == -1) {
+                username_dom.addClass("ui-state-error");
+                updateTips("帳號不存在");
+            } else if (data.status == -2) {
+                password_dom.addClass("ui-state-error");
+                updateTips("密碼錯誤");
+            }
+        }, "json");
+    }
+    return valid;
+}
+
+function signup() {
+    var valid = true;
+    var username_dom = $("#signup_username");
+    var password_dom = $("#signup_password");
+    var all_fields = $([]).add(username_dom).add(password_dom);
+    all_fields.removeClass("ui-state-error");
+
+    valid = valid && checkLength(username_dom, "username", 3, 16);
+    valid = valid && checkLength(password_dom, "password", 5, 16);
+
+    valid = valid && checkRegexp(username_dom, /^([0-9a-zA-Z_])+$/i, "帳號必須由 0-9, a-z, A-Z 和底線組成，長度在 3 ~ 16 字元之間");
+    valid = valid && checkRegexp(password_dom, /^([0-9a-zA-Z_])+$/, "密碼必須由 0-9, a-z, A-Z 和底線組成，長度在 5 ~ 16 字元之間");
+
+    if (valid) {
+        $.post("http://sdvxlevel.lionfree.net/signup.php", {
+            "username": username_dom.val(),
+            "password": password_dom.val()
+        }, function (data) {
+            if (data.status == 0) {
+                $("#signup_dialog").dialog("close");
+            } else {
+                username_dom.addClass("ui-state-error");
+                updateTips("帳號已經被使用");
+            }
+        }, "json");
+    }
+    return valid;
+}
+
+function not_logged_info() {
+    // not logged in
+    $("#logout").hide();
+    $("#vote").hide();
+    $("#login_status").html("尚未登入");
+}
+
+function updateTips(t) {
+    var tips = $(".validateTips");
+    tips
+      .text(t)
+      .addClass("ui-state-highlight");
+    setTimeout(function () {
+        tips.removeClass("ui-state-highlight", 1500);
+    }, 500);
+}
+
+function checkLength(o, n, min, max) {
+    if (o.val().length > max || o.val().length < min) {
+        o.addClass("ui-state-error");
+        updateTips("欄位 " + n + " 長度必須介於 " +
+          min + " 和 " + max + " 之間");
+        return false;
+    } else {
+        return true;
+    }
+}
+
+function checkRegexp(o, regexp, n) {
+    if (!(regexp.test(o.val()))) {
+        o.addClass("ui-state-error");
+        updateTips(n);
+        return false;
+    } else {
+        return true;
+    }
+}
+
+function init_account() {
+    $("#login").button();
+    $("#logout").button();
+    $("#signup").button();
+
+    if (localStorage.getItem("username") != null && localStorage.getItem("password") != null) {
+        // try to login
+        $("#login_status").html("登入中...");
+        $.post("http://sdvxlevel.lionfree.net/login.php", {
+            "username": localStorage.getItem("username"),
+            "password": localStorage.getItem("password")
+        }, function (data) {
+            if (data.status == 0) {
+                // 登入成功
+                login_success(localStorage.getItem("username"));
+            } else {
+                // 登入失敗
+                not_logged_info();
+            }
+        }, "json");
+    } else {
+        not_logged_info();
+    }
+
+    // signup dialog
+    var all_fields = $([]).add($("#signup_username")).add($("#signup_password"));
+    var signup_dialog = $("#signup_dialog").dialog({
+        autoOpen: false,
+        height: 400,
+        width: 600,
+        modal: true,
+        buttons: {
+            "創新帳號": signup,
+            "取消": function () {
+                signup_dialog.dialog("close");
+            }
+        },
+        close: function () {
+            signup_dialog.find("form")[0].reset();
+            all_fields.removeClass("ui-state-error");
+        },
+        show: { effect: "blind", duration: 500 },
+        hide: { effect: "blind", duration: 500 }
+    });
+    signup_dialog.find("form").on("submit", function (event) {
+        event.preventDefault();
+        signup();
+    });
+    $("#signup").button().on("click", function () {
+        signup_dialog.dialog("open");
+    });
+
+    // login dialog
+    var login_all_fields = $([]).add($("#login_username")).add($("#login_password"));
+    var login_dialog = $("#login_dialog").dialog({
+        autoOpen: false,
+        height: 400,
+        width: 600,
+        modal: true,
+        buttons: {
+            "登入": login,
+            "取消": function () {
+                login_dialog.dialog("close");
+            }
+        },
+        close: function () {
+            login_dialog.find("form")[0].reset();
+            login_all_fields.removeClass("ui-state-error");
+        },
+        show: { effect: "blind", duration: 500 },
+        hide: { effect: "blind", duration: 500 }
+    });
+    login_dialog.find("form").on("submit", function (event) {
+        event.preventDefault();
+        login();
+    });
+    $("#login").button().on("click", function () {
+        login_dialog.dialog("open");
+    });
+
+    // logout button
+    $("#logout").button().on("click", logout);
+
+    // vote button
+    $("#vote").button().on("click", function() { window.location = "vote.html"; });
+}
+
 
 /**********************************************************
  * Document ready function
@@ -721,11 +920,6 @@ $(document).ready(function () {
         });
     }
 
-    // 設定 FB 按鈕
-    $("#save_with_fb").on("click", saveWithFB);
-    $("#load_from_fb").on("click", loadFromFB);
-
-
     var window_width = $(window).width();
     var window_height = $(window).height();
     $("#tabs").tabs();
@@ -795,4 +989,6 @@ $(document).ready(function () {
         show: { effect: "blind", duration: 500 },
         hide: { effect: "blind", duration: 500 }
     });
+
+    init_account();
 });

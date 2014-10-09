@@ -32,6 +32,12 @@
         <br />
         <input type="text" id="link" size="100" />
         <br />
+        <span id="login_status">登入狀態</span>
+        <button id="login">登入</button>
+        <button id="vote">投票</button>
+        <button id="logout">登出</button>
+        <button id="signup">註冊</button>
+        <br />
         <label><input type="checkbox" id="switch_click" />點燈方式</label>
         <a href="index_m.html">Mobile Version</a>
         <input type="button" id="customize" value="設定" />
@@ -68,6 +74,42 @@
             <button class="song_info_popup_close">關閉</button>
         </div>
         
+        <!-- Signup dialog -->
+        <div id="signup_dialog" title="創新帳號">
+            <p class="validateTips">帳號密碼為必填欄位</p>
+
+            <form>
+                <fieldset>
+                    <label for="signup_username">帳號</label>
+                    <input type="text" id="signup_username" class="text ui-widget-content ui-corner-all">
+                    <br />
+                    <label for="signup_password">密碼</label>
+                    <input type="password" id="signup_password" class="text ui-widget-content ui-corner-all">
+
+                    <!-- Allow form submission with keyboard without duplicating the dialog button -->
+                    <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+                </fieldset>
+            </form>
+        </div>
+        
+        <!-- Login dialog -->
+        <div id="login_dialog" title="登入">
+            <p class="validateTips">帳號密碼為必填欄位</p>
+
+            <form>
+                <fieldset>
+                    <label for="login_username">帳號</label>
+                    <input type="text" id="login_username" class="text ui-widget-content ui-corner-all">
+                    <br />
+                    <label for="login_password">密碼</label>
+                    <input type="password" id="login_password" class="text ui-widget-content ui-corner-all">
+
+                    <!-- Allow form submission with keyboard without duplicating the dialog button -->
+                    <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+                </fieldset>
+            </form>
+        </div>
+        
         <!-- Option dialog -->
         <div id="customize_dialog">
             <label for="score_style_font_size">評價字體大小:</label>
@@ -92,6 +134,7 @@
                 </ul>
                 <div id="announcements">
                     <ul>
+                        <li>地力表投票測試中（登入後可見），請大家多多協助 :)</li>
                         <li>由於資料儲存方式有更改，舊有資料可能無法直接使用到本次更新，如果有發生圖片顯示問題或資料問題請用 Clear ALL 清除資料後再重新使用。</li>
                         <li>儲存方式改為「手動」，不再是以前的自動儲存，請大家注意使用。</li>
                         <li>詳細更新資訊請參考 Updates</li>
@@ -100,6 +143,13 @@
                 </div>
                 <div id="updates">
                     <div id="updates_accordion">
+                        <h3>2014.10.09</h3>
+                        <div>
+                            <ul>
+                                <li>新增註冊帳號系統</li>
+                                <li>新增利用註冊之帳號直接進行地力表投票系統</li>
+                            </ul>
+                        </div>
                         <h3>2014.10.06</h3>
                         <div>
                             <ul>
