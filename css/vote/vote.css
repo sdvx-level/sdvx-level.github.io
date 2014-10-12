@@ -69,3 +69,7 @@
 .ui-widget, .ui-widget button, .ui-widget input {
     font-family: Consolas, 微軟正黑體;
 }
+
+div.ui-tooltip {
+    max-width: initial;
+}

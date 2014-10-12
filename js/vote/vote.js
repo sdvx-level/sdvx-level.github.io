@@ -91,6 +91,8 @@ function saveToAccount() {
 }
 
 $(document).ready(function () {
+    google.load("visualization", "1", { packages: ["corechart"] });
+
     var username = localStorage.getItem("username");
     var password = localStorage.getItem("password");
 
@@ -138,7 +140,7 @@ $(document).ready(function () {
     });
 
     // Load user vote state
-    $.post(phpHost + "get_vote.php", {
+    $.post(phpHost + "get_vote_new.php", {
         "username": username,
         "password": password
     }, function (data) {
@@ -152,9 +154,68 @@ $(document).ready(function () {
                 var elem_dom = $(this);
                 $(".score_div[data-music-score=" + score + "]").find(".right_div").append(elem_dom.detach().css({ top: 0, left: 0 }));
             });
+
+            var song_vote_result = JSON.parse(data.result);
+            $(document).tooltip({
+                items: ".elem",
+                content: function() {
+                    var element = $(this);
+                    var scores = song_vote_result[element.data("music-id")];
+                    if (scores != undefined) {
+                        return '<div id="chart_div" data-music-id="' + element.data("music-id") + '" style="width: 576px; height: 324px;"></div>';
+                    }
+                    return "";
+                },
+                close: function() {
+                    $(".ui-helper-hidden-accessible").remove();
+                },
+                open: function(event, ui) {
+                    var scores = song_vote_result[ui.tooltip.find("#chart_div").data("music-id")];
+                    drawChart(ui.tooltip.find("#chart_div")[0], scores);
+                }
+            });
             $("#status_dialog").dialog("close");
         } else {
             $("#status_dialog").dialog("close");
         }
     }, "json");
 });
+
+
+function drawChart(chart_div, scores) {
+    var content = [['分數', '票數']];
+    content.push(["個 人 差", scores.reduce(function (total, x) { return x == 100 ? total + 1 : total; }, 0)]);
+    for (var i = -6; i <= 6; ++i) {
+        content.push([i.toString(), scores.reduce(function (total, x) { return x == i ? total + 1 : total; }, 0)]);
+    }
+
+    var data = google.visualization.arrayToDataTable(content);
+
+    var options = {
+        legend: {
+            position: "none"
+        },
+        tooltip: {
+        },
+        vAxis: {
+            minValue: 0,
+            gridlines: {
+                count: -1
+            }
+        },
+        fontName: "Consolas, 微軟正黑體",
+        hAxis: {
+            maxAlternation: 1
+        },
+        chartArea: {
+            width: "90%",
+            height: "80%",
+            top: "5%"
+        }
+    };
+
+    var chart = new google.visualization.ColumnChart(chart_div);
+
+    chart.draw(data, options);
+
+}
