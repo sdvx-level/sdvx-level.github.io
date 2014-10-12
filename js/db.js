@@ -362,7 +362,7 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                     click: is_mobile ? null : function (layer) {
                         // 根據點燈方式做不同的點燈效果
                         var clear_state;
-                        if ($("#switch_click").prop("checked") == false) {      // Clear 點燈
+                        if (layer.event.shiftKey == false && $("#switch_click").prop("checked") == false) {      // Clear 點燈
                             // get current state by class
                             clear_state = clearClassToValue($(this).parent());
                             // clear_state = getLocalStorage(key, 0);
@@ -1034,4 +1034,6 @@ $(document).ready(function () {
     });
 
     init_account();
+
+    $(document).tooltip();
 });
