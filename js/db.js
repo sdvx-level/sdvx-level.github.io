@@ -2,8 +2,6 @@
 var borderSize = 6;
 var scoreTypeFontSize = 24;
 
-var pressTimer;
-
 // var phpHost = "http://sdvxlevel.host-ed.me/";
 var phpHost = "http://sdvxlevel.lionfree.net/";
 
@@ -203,6 +201,96 @@ function isMobile() {
 /**********************************************************
  * Element generation functions
  **********************************************************/
+function drawSongDataChart(chart_div, table_content, song_title) {
+    var data = google.visualization.arrayToDataTable(table_content);
+
+    var options = {
+        title: song_title,
+        titlePosition: 'in',
+        legend: {
+            position: "none"
+        },
+        tooltip: {
+        },
+        vAxis: {
+            minValue: 0,
+            maxValue: 11,
+            gridlines: {
+                count: 12
+            }
+        },
+        fontName: "Consolas, 微軟正黑體",
+        hAxis: {
+            maxAlternation: 1
+        },
+        chartArea: {
+            width: "90%",
+            height: "85%",
+            top: "5%"
+        }
+    };
+
+    var chart = new google.visualization.ColumnChart(chart_div);
+
+    chart.draw(data, options);
+}
+
+function zeropad(n, width, z) {
+    z = z || '0';
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+function retrieveCommentInfo(song_id, page, song_comment_div_dom) {
+    song_comment_div_dom.html("讀取中...");
+    $.post(phpHost + "get_comment.php", {
+        "songid": song_id,
+        "page": page
+    }, function (data) {
+        var comments = JSON.parse(data.result);
+        var table_dom = $("<table style='width: 100%'></table>");
+        for (var index in comments) {
+            var date = new Date(comments[index].time);
+            var year = date.getFullYear();
+            var month = date.getMonth() + 1;
+            var day = date.getDate();
+            var hour = date.getHours();
+            var min = date.getMinutes();
+            var sec = date.getSeconds();
+            var time = year + "." + zeropad(month, 2) + "." + zeropad(day, 2) + " " + zeropad(hour, 2) + ":" + zeropad(min, 2) + ":" + zeropad(sec, 2);
+            table_dom.append(
+                "<tr>" +
+                    "<th>" + comments[index].user_id + ":</th>" +
+                    "<td style='width: 100%'>" + comments[index].comment + "</td>" +
+                    "<td style='white-space:nowrap;'>" + time + "</td>" +
+                "</tr>"
+            );
+        }
+        song_comment_div_dom.html(table_dom);
+    }, "json");
+}
+
+function postComment(song_id, username, password, comment, song_comment_send_div_dom, song_comment_div_dom) {
+    // disable the button and text
+    song_comment_send_div_dom.find(".new_comment_submit").button("disable");
+    song_comment_send_div_dom.find(".new_comment_text").prop("disabled", true);
+
+    $.post(phpHost + "post_comment.php", {
+        "username": username,
+        "password": password,
+        "comment": comment,
+        "songid": song_id
+    }, function (data) {
+        console.log(data);
+        if (data.status == 0) {
+            retrieveCommentInfo(song_id, 0, song_comment_div_dom);
+            song_comment_send_div_dom.find(".new_comment_text").val("");
+        }
+        song_comment_send_div_dom.find(".new_comment_submit").button("enable");
+        song_comment_send_div_dom.find(".new_comment_text").prop("disabled", false);
+    }, "json");
+}
+
 function appendSongsByDbResult(db_result, div_dom, header_text) {
     // append new row
     div_dom.append("<div class='score_div score_div_no_bottom'><div class='left_div'></div><div class='right_div'></div></div>");
@@ -215,6 +303,12 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
         div_right_dom.append("<div class='elem' data-music-id='" + entry.id + "'></div>");
         var elem_dom = div_right_dom.find("div").last();
         var key = entry.id;
+        var title_name = entry.title;
+        if (entry.type == 3)
+            title_name += " [EXH]";
+        else if (entry.type == 4)
+            title_name += " [INF]";
+        var value = entry.value + " " + entry.type;
 
         // red localStorage & set opacity
         var opacity = 1;
@@ -284,11 +378,6 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
 
                     click: function (layer) {
                         // set up overlap div text
-                        var title_name = entry.title;
-                        if (entry.type == 3)
-                            title_name += " [EXH]";
-                        else if (entry.type == 4)
-                            title_name += " [INF]";
                         var info_text = "<img src=\"" + "img/" + entry.value + " " + entry.type + ".png" + "\" /><br />";
                         info_text += title_name + "<br />";
                         info_text += "短鍵: " + entry.short_btn + "<br />";
@@ -314,55 +403,111 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                     layer: true,
                     name: 'song_img',
 
-                    mousemove: is_mobile ? null : function (layer) {
-                        var title_name = entry.title;
-                        if (entry.type == 3)
-                            title_name += " [EXH]";
-                        else if (entry.type == 4)
-                            title_name += " [INF]";
-                        $(this).setLayer('song_info', {
-                            visible: true,
-                            text: title_name + "\n短　　鍵: " + entry.short_btn + "\n長短混合: " + entry.short_long_mix + "\n旋　　鈕: " + entry.analog + "\n腦力訓練: " + entry.brain_train + "\n節　　奏: " + entry.rythm + "\n演出陷阱: " + entry.trap
-                        });
-                    },
-                    mouseout: function (layer) {
-                        if (is_mobile == false) {
-                            $(this).setLayer('song_info', {
-                                visible: false
-                            });
-                        }
-                        clearTimeout(pressTimer);
-                    },
-
-                    mousedown: function (layer) {
-                        pressTimer = setTimeout(function () {
-                            // set up overlap div text
-                            var title_name = entry.title;
-                            if (entry.type == 3)
-                                title_name += " [EXH]";
-                            else if (entry.type == 4)
-                                title_name += " [INF]";
-                            var info_text = "<img src=\"" + "img/" + entry.value + " " + entry.type + ".png" + "\" /><br />";
-                            info_text += title_name + "<br />";
-                            info_text += "短鍵: " + entry.short_btn + "<br />";
-                            info_text += "長短混合: " + entry.short_long_mix + "<br />";
-                            info_text += "旋鈕: " + entry.analog + "<br />";
-                            info_text += "腦力訓練: " + entry.brain_train + "<br />";
-                            info_text += "節奏: " + entry.rythm + "<br />";
-                            info_text += "演出陷阱: " + entry.trap + "<br />";
-                            $("#song_info_text").html(info_text);
-                            // show up overlap div
-                            $('#song_info_popup').popup('show');
-                        }, 1000);
-                    },
-                    mouseup: function (layer) {
-                        clearTimeout(pressTimer);
-                    },
-
                     click: is_mobile ? null : function (layer) {
                         // 根據點燈方式做不同的點燈效果
                         var clear_state;
-                        if (layer.event.shiftKey == false && $("#switch_click").prop("checked") == false) {      // Clear 點燈
+                        if (layer.event.ctrlKey == true) {
+                            // Ctrl + click
+                            $("#song_info_dialog").dialog("option", {
+                                title: title_name,
+                                width: $(window).width() * 0.8,
+                                height: $(window).height() * 0.8,
+                                maxHeight: $(window).height() * 0.8
+                            });
+
+                            var song_img_dom = $("<img />", {
+                                src: "img_b/" + value + ".png"
+                            });
+
+                            var song_info_table_dom = $("<table class='song_info_table'>" +
+                                    "<tr>" +
+                                        "<td class='song_info_table_img' rowspan='12'></td>" +
+                                        "<th>地力表分數</td>" +
+                                        "<td>" + entry.score + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
+                                        "<th>歌曲等級</td>" +
+                                        "<td>" + entry.level + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
+                                        "<th>BPM</td>" +
+                                        "<td>" + entry.bpm + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
+                                        "<th>Chain</td>" +
+                                        "<td>" + entry.chain + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
+                                        "<th>Clear rate</td>" +
+                                        "<td>" + entry.clear_rate + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
+                                        "<th>短鍵</td>" +
+                                        "<td>" + entry.short_btn + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
+                                        "<th>長短鍵複合</td>" +
+                                        "<td>" + entry.short_long_mix + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
+                                        "<th>旋鍵複合</td>" +
+                                        "<td>" + entry.analog + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
+                                        "<th>腦力訓練</td>" +
+                                        "<td>" + entry.brain_train + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
+                                        "<th>節奏</td>" +
+                                        "<td>" + entry.rythm + "</td>" +
+                                    "</tr>" +
+                                     "<tr>" +
+                                        "<th>演出陷阱</td>" +
+                                        "<td>" + entry.trap + "</td>" +
+                                    "</tr>" +
+                                    "<tr>" +
+                                        "<th>綜合分數</td>" +
+                                        "<td>" + entry.total + "</td>" +
+                                    "</tr>" +
+                                "</table>");
+
+                            song_info_table_dom.find(".song_info_table_img").append(song_img_dom);
+
+                            var song_div_dom = $("<div />").append(song_info_table_dom);
+                            var song_comment_div_dom = $("<div class='song_info_comment_div'></div>");
+                            var song_comment_send_div_dom = $("<div class='song_info_comment_send_div'></div>");
+                            song_comment_send_div_dom.append("<table class='full_width_table'><tr><td class='full_width_table'><input type='text' class='new_comment_text ui-widget-content ui-corner-all' /></td><td><input type='submit' class='new_comment_submit' value='送出留言'/></td>");
+                            song_comment_send_div_dom.find(".new_comment_submit").button().on('click', function () {
+                                var comment = song_comment_send_div_dom.find(".new_comment_text").val();
+                                if (comment.length > 70) {
+                                    $("<div>留言上限為 70 字</div>").dialog({
+                                        closeOnEscape: true,
+                                        modal: true,
+                                        title: "錯誤",
+                                        show: { effect: "blind", duration: 200 },
+                                        hide: { effect: "blind", duration: 200 }
+                                    });
+                                } else {
+                                    postComment(entry.id, localStorage.getItem("username"), localStorage.getItem("password"), comment, song_comment_send_div_dom, song_comment_div_dom);
+                                }
+                            });
+
+                            $("#song_info_dialog").html("")
+                                .append(song_div_dom)
+                                .append(song_comment_div_dom);
+                            if (localStorage.getItem("username") != null) {
+                                $("#song_info_dialog").append(song_comment_send_div_dom);
+                            }
+                            song_div_dom.css("text-align", "center");
+                            song_info_table_dom.css("margin", "0 auto");
+                            /*
+                            song_comment_div_dom.css("text-align", "center");
+                            song_comment_table_dom.css("margin", "0 auto");
+                            */
+                            $("#song_info_dialog").dialog("open");
+                            retrieveCommentInfo(entry.id, 0, song_comment_div_dom);
+
+                        } else if (layer.event.shiftKey == false && $("#switch_click").prop("checked") == false) {      // Clear 點燈
                             // get current state by class
                             clear_state = clearClassToValue($(this).parent());
                             // clear_state = getLocalStorage(key, 0);
@@ -448,19 +593,6 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
             }
 
             canvas_dom.drawText({
-                fillStyle: '#9cf',
-                x: borderSize, y: borderSize,
-                maxWidth: imageSize,
-                fromCenter: false,
-                fontSize: 14,
-                fontFamily: 'Verdana, sans-serif, 微軟正黑體',
-                align: 'left',
-                layer: true,
-                name: 'song_info',
-                visible: false
-            });
-
-            canvas_dom.drawText({
                 fillStyle: 'rgb(255,255,0)',
                 strokeStyle: 'rgb(0,0,255)',
                 fontStyle: 'bold',
@@ -479,7 +611,6 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                 text: clear_text
             });
         }
-        var value = entry.value + " " + entry.type;
         image_obj.src = "img/" + value + ".png";
     });
 }
@@ -1032,8 +1163,64 @@ $(document).ready(function () {
         show: { effect: "blind", duration: 500 },
         hide: { effect: "blind", duration: 500 }
     });
+    // 設定歌曲資料 dialog
+    $("#song_info_dialog").dialog({
+        autoOpen: false,
+        closeOnEscape: true,
+        draggable: false,
+        modal: true,
+        width: window_width * 0.8,
+        height: window_height * 0.8,
+        maxHeight: window_height * 0.8,
+        title: "Song info",
+        position: { my: "center top", at: "center top+10%", of: window },
+        close: function (event, ui) {
+            $('#wrap').show(); $("body").removeClass("no_scroll");
+        },
+        open: function (event, ui) { $('.ui-widget-overlay').bind('click', function () { $("#song_info_dialog").dialog('close'); }); $("body").addClass("no_scroll"); },
+        show: { effect: "blind", duration: 500 },
+        hide: { effect: "blind", duration: 500 }
+    });
 
     init_account();
 
-    $(document).tooltip();
+    $(document).tooltip({
+        items: ".elem, #light_type",
+        content: function () {
+            var element = $(this);
+            if (element.is("#light_type")) {
+                return element.attr("title");
+            }
+            if (element.is(".elem")) {
+                return '<div id="chart_div" data-music-id="' + element.data("music-id") + '" style="width: 512px; height: 288px;"></div>';
+            }
+            return "";
+        },
+        close: function () {
+            $(".ui-helper-hidden-accessible").remove();
+        },
+        open: function (event, ui) {
+            var music_id = ui.tooltip.find("#chart_div").data("music-id");
+            var song_info_row = music_db({ id: music_id }).first();
+            if (song_info_row) {
+                var song_info = [
+                    ["種類", "分數"]
+                ];
+                song_info.push(["短鍵", song_info_row.short_btn]);
+                song_info.push(["長短鍵複合", song_info_row.short_long_mix]);
+                song_info.push(["旋鍵複合", song_info_row.analog]);
+                song_info.push(["腦力訓練", song_info_row.brain_train]);
+                song_info.push(["節奏", song_info_row.rythm]);
+                song_info.push(["演出陷阱", song_info_row.trap]);
+
+                var title_name = song_info_row.title;
+                if (song_info_row.type == 3)
+                    title_name += " [EXH]";
+                else if (song_info_row.type == 4)
+                    title_name += " [INF]";
+
+                drawSongDataChart(ui.tooltip.find("#chart_div")[0], song_info, title_name);
+            }
+        }
+    });
 });

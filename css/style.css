@@ -119,3 +119,19 @@ div#users-contain table { margin: 1em 0; border-collapse: collapse; width: 100%;
 div#users-contain table td, div#users-contain table th { border: 1px solid #eee; padding: .6em 10px; text-align: left; }
 .ui-dialog .ui-state-error { padding: .3em; }
 .validateTips { border: 1px solid transparent; padding: 0.3em; }
+
+div.ui-tooltip {
+    max-width: initial;
+}
+
+.song_info_table th {
+    width: 200px;
+}
+
+.new_comment_text {
+    width: 100%;
+}
+
+.full_width_table {
+    width: 100%;
+}
