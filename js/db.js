@@ -310,7 +310,7 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
             title_name += " [INF]";
         var value = entry.value + " " + entry.type;
 
-        // red localStorage & set opacity
+        // read localStorage & set opacity
         var opacity = 1;
         var clear_text = "";
         var clear_visible = false;
@@ -1010,6 +1010,114 @@ function init_account() {
     });
 }
 
+/**********************************************************
+ * Load from http://sdvx-s.coresv.com/
+ **********************************************************/
+function getValueFromSongType(song_type) {
+    switch (song_type) {
+        case "novice":
+            return 1;
+        case "advanced":
+            return 2;
+        case "exhaust":
+            return 3;
+        case "infinite":
+            return 4;
+        default:
+            return 0;
+    }
+}
+
+function loadFromSDVXScore() {
+    var username = prompt("請輸入 sdvx-s 的 user name", "sample");
+    if (username == null)
+        return;
+
+    $("#save_load_dialog").html("讀取中...");
+    $("#save_load_dialog").dialog("open");
+
+    $.getJSON("http://sdvx-s.coresv.com/user/" + username + ".json?callback=?")
+        .done(function (data) {
+            var tracks = data.profile.tracks;
+            for (var track_index in tracks) {
+                var track = tracks[track_index];
+                var track_title = track.title;
+                // parse &amp; to &
+                var div = document.createElement('div');
+                div.innerHTML = track_title;
+                track_title = div.firstChild.nodeValue;
+                // trim "(EXIT TUNES)" from end of the song title
+                var track_title_trim_index = track_title.lastIndexOf("(EXIT TUNES)");
+                if (track_title_trim_index != -1) {
+                    track_title = track_title.substring(0, track_title_trim_index);
+                }
+                for (var info_index in track) {
+                    var info = track[info_index];
+                    var song_type = getValueFromSongType(info_index);
+                    if (song_type == 0)
+                        continue;
+
+                    // find elem of this song
+                    var db_result = music_db({ title: track_title, type: song_type });
+                    if (db_result.count() == 0)
+                        continue;
+
+                    var song_id = db_result.first().id;
+                    var elem = $(".elem[data-music-id=" + song_id.toString() + "]");
+                    
+                    // info.grade
+                    // b, a, aa, aaa
+                    switch (info.grade) {
+                        case "b":
+                            setTypeByValue(elem.find("canvas"), 1);
+                            break;
+                        case "a":
+                            setTypeByValue(elem.find("canvas"), 2);
+                            break;
+                        case "aa":
+                            setTypeByValue(elem.find("canvas"), 3);
+                            break;
+                        case "aaa":
+                            setTypeByValue(elem.find("canvas"), 4);
+                            break;
+                        default:
+                            setTypeByValue(elem.find("canvas"), 0);
+                            break;
+                    }
+
+                    // info.medal
+                    // crash, comp, excessive, uc, per
+                    switch (info.medal) {
+                        case "crash":
+                            setClearByValue(elem, 0);
+                            break;
+                        case "comp":
+                            setClearByValue(elem, 1);
+                            break;
+                        case "excessive":
+                            setClearByValue(elem, 2);
+                            break;
+                        case "uc":
+                            setClearByValue(elem, 3);
+                            break;
+                        case "per":
+                            setClearByValue(elem, 4);
+                            break;
+                        default:
+                            setClearByValue(elem, 0);
+                            break;
+                    }
+                }
+            }
+        })
+        .fail(function (e) {
+            return;
+        })
+        .always(function() {
+            $("#save_load_dialog").dialog("close");
+        });
+}
+
 
 /**********************************************************
  * Document ready function
@@ -1041,15 +1149,16 @@ $(document).ready(function () {
     appendByScore(100);
     appendByScore(-100);
 
-    $("#save_to_browser").on("click", saveToLocalStorage);
-    $("#load_from_browser").on("click", loadFromLocalStorage);
-    $("#generate_link").on("click", updateLink);
+    $("#save_to_browser").button().on("click", saveToLocalStorage);
+    $("#load_from_browser").button().on("click", loadFromLocalStorage);
+    $("#load_from_sdvx_score").button().on("click", loadFromSDVXScore);
+    $("#generate_link").button().on("click", updateLink);
 
-    $("#download_as_png").on("click", downloadAsPng);
-    $("#clear_all_btn").on("click", clearAll);
-    $("#upload_to_imgur").on("click", uploadToImgur);
+    $("#download_as_png").button().on("click", downloadAsPng);
+    $("#clear_all_btn").button().on("click", clearAll);
+    $("#upload_to_imgur").button().on("click", uploadToImgur);
 
-    $("#customize").on("click", openCustomize);
+    $("#customize").button().on("click", openCustomize);
 
     $('#song_info_popup').popup({
         blur: false,

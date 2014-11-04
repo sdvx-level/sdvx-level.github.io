@@ -26,16 +26,21 @@
     <link rel="stylesheet" type="text/css" href="css/style.css" />
 </head>
     <body>
-        <input type="button" id="save_to_browser" value="儲存至瀏覽器" />
-        <input type="button" id="load_from_browser" value="從瀏覽器讀取" />
-        <input type="button" id="generate_link" value="產生連結" />
+        <button id="save_to_browser">儲存至瀏覽器</button>
+        <button id="load_from_browser">從瀏覽器讀取</button>
+        <button id="load_from_sdvx_score">從 sdvx-s 讀取</button>
+        <button id="download_as_png">儲存成 PNG</button>
+        <button id="upload_to_imgur">上傳到 imgur</button>
+        <button id="clear_all_btn">清除成績資料</button>
+        <button id="customize">設定</button>
         <br />
-        <input type="button" id="download_as_png" value="Save as PNG" />
-        <input type="button" id="upload_to_imgur" value="上傳到 imgur" />
-        <input type="button" id="clear_all_btn" value="Clear ALL" />
         <br />
-        <input type="text" id="link" size="100" />
+        <input type="text" class="ui-widget-content ui-corner-all" id="link" size="100" />
+        <button id="generate_link">產生連結</button>
         <br />
+        <br />
+        <a href="index_m.html">Mobile Version</a>
+        <label id="light_type" title="也可以在點燈時按住 Shift 達到相同效果"><input type="checkbox" id="switch_click" />點燈方式</label>
         <span id="login_status">登入狀態</span>
         <button id="login">登入</button>
         <button id="save_to_account">儲存</button>
@@ -43,10 +48,6 @@
         <button id="vote">投票</button>
         <button id="logout">登出</button>
         <button id="signup">註冊</button>
-        <br />
-        <label id="light_type" title="也可以在點燈時按住 Shift 達到相同效果" ><input type="checkbox" id="switch_click" />點燈方式</label>
-        <a href="index_m.html">Mobile Version</a>
-        <input type="button" id="customize" value="設定" />
         <!--
             <div id="facebook_logged_in" style="display: none;">
                 <input type="button" id="save_with_fb" value="Save with FB" />
@@ -153,13 +154,19 @@
                         <li>地力表投票測試中（登入後可見），請大家多多協助 :)</li>
                         <li>按住 Ctrl 點歌曲會顯示歌曲詳細資料，若有登入可以留言 (目前還沒有刪除功能，請送出前多加確認XD)</li>
                         <li>由於資料儲存方式有更改，舊有資料可能無法直接使用到本次更新，如果有發生圖片顯示問題或資料問題請用 Clear ALL 清除資料後再重新使用。</li>
-                        <li>儲存方式改為「手動」，不再是以前的自動儲存，請大家注意使用。</li>
                         <li>詳細更新資訊請參考 Updates</li>
                         <li>問題回報、建議提供歡迎使用 Twitter、Github 連結，或 sdvx.sheet@gmail.com 寄信 :)</li>
                     </ul>
                 </div>
                 <div id="updates">
                     <div id="updates_accordion">
+                        <h3>2014.11.05</h3>
+                        <div>
+                            <ul>
+                                <li>新增從 sdvx-s 讀取的功能</li>
+                                <li>稍微修改介面跟按鈕排序</li>
+                            </ul>
+                        </div>
                         <h3>2014.11.02</h3>
                         <div>
                             <ul>
