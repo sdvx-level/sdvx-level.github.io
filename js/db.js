@@ -474,6 +474,7 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                             song_info_table_dom.find(".song_info_table_img").append(song_img_dom);
 
                             var song_div_dom = $("<div />").append(song_info_table_dom);
+                            var song_player_dom = loadPlayerAndReturnDom(entry.id);
                             var song_comment_div_dom = $("<div class='song_info_comment_div'></div>");
                             var song_comment_send_div_dom = $("<div class='song_info_comment_send_div'></div>");
                             song_comment_send_div_dom.append("<table class='full_width_table'><tr><td class='full_width_table'><input type='text' class='new_comment_text ui-widget-content ui-corner-all' /></td><td><input type='submit' class='new_comment_submit' value='送出留言'/></td>");
@@ -494,6 +495,7 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
 
                             $("#song_info_dialog").html("")
                                 .append(song_div_dom)
+                                .append(song_player_dom)
                                 .append(song_comment_div_dom);
                             if (localStorage.getItem("username") != null) {
                                 $("#song_info_dialog").append(song_comment_send_div_dom);
@@ -1118,6 +1120,36 @@ function loadFromSDVXScore() {
         });
 }
 
+/**********************************************************
+ * Youtube API function
+ **********************************************************/
+var YoutubeApiLoadDone = false;
+
+function onYouTubeIframeAPIReady() {
+    YoutubeApiLoadDone = true;
+}
+
+function gotoAndPlay(player, second, length) {
+    if (player.getPlayerState() != YT.PlayerState.PLAYING) {
+        player.playVideo();
+    }
+    player.seekTo(second);
+    if (length != null) {
+        setTimeout(function() {
+            stopVideo(player);
+        }, length * 1000);
+    }
+}
+
+function stopVideo(player) {
+    player.stopVideo();
+}
+
+function loadPlayerAndReturnDom(music_id) {
+    var div = $("<div />");
+    div.load("./info/" + music_id + ".html");
+    return div;
+}
 
 /**********************************************************
  * Document ready function
@@ -1332,4 +1364,10 @@ $(document).ready(function () {
             }
         }
     });
+
+    // load youtube script
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var first_script_tag = document.getElementsByTagName('script')[0];
+    first_script_tag.parentNode.insertBefore(tag, first_script_tag);
 });
