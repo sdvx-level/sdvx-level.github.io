@@ -291,6 +291,26 @@ function postComment(song_id, username, password, comment, song_comment_send_div
     }, "json");
 }
 
+function type_to_string(type, song_id) {
+    if (type == 3)
+        return "EXH";
+    if (type == 4 && song_id < 123)
+        return "INF";
+    if (type == 4 && song_id >= 123)
+        return "GRV";
+    return "";
+}
+
+function ver_to_string(ver) {
+    if (ver == "1")
+        return "I";
+    if (ver == "2")
+        return "II";
+    if (ver == "3")
+        return "III";
+    return "";
+}
+
 function appendSongsByDbResult(db_result, div_dom, header_text) {
     // append new row
     div_dom.append("<div class='score_div score_div_no_bottom'><div class='left_div'></div><div class='right_div'></div></div>");
@@ -304,10 +324,7 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
         var elem_dom = div_right_dom.find("div").last();
         var key = entry.id;
         var title_name = entry.title;
-        if (entry.type == 3)
-            title_name += " [EXH]";
-        else if (entry.type == 4)
-            title_name += " [INF]";
+        title_name += " [" + type_to_string(entry.type, entry.id) + "]";
         var value = entry.value + " " + entry.type;
 
         // read localStorage & set opacity
@@ -612,6 +629,24 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                 visible: clear_visible,
                 text: clear_text
             });
+
+            canvas_dom.drawText({
+                fillStyle: 'rgb(255,255,0)',
+                strokeStyle: 'rgb(0,0,255)',
+                fontStyle: 'bold',
+                strokeWidth: 1,
+                x: borderSize + 2,
+                y: borderSize + 2 + scoreTypeFontSize / 3,
+                // x: borderSize + imageSize/2, y: borderSize + imageSize/2,
+                // fromCenter: true,
+                fontSize: 18,
+                fontFamily: 'sans-serif, 微軟正黑體',
+                align: 'left',
+                respectAlign: true,
+                layer: true,
+                name: 'song_ver',
+                text: ver_to_string(entry.ver)
+            })
         }
         image_obj.src = "img/" + value + ".png";
     });
@@ -1355,10 +1390,7 @@ $(document).ready(function () {
                 song_info.push(["演出陷阱", song_info_row.trap]);
 
                 var title_name = song_info_row.title;
-                if (song_info_row.type == 3)
-                    title_name += " [EXH]";
-                else if (song_info_row.type == 4)
-                    title_name += " [INF]";
+                title_name += " [" + type_to_string(song_info_row.type, music_id) + "]";
 
                 drawSongDataChart(ui.tooltip.find("#chart_div")[0], song_info, title_name);
             }
