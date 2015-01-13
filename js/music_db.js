@@ -129,6 +129,9 @@ var music_db = TAFFY([
 */
 
 var music_db = TAFFY([
+    {"id":101,"value":"For UltraPlayers","title":"For UltraPlayers","type":3,"score":0,"level":16,"bpm":"201","chain":2402,"clear_rate":56.3,"short_btn":0,"short_long_mix":0,"analog":0,"brain_train":0,"rythm":0,"trap":0,"total":0,"short_tag":"","analog_tag":"","other_tag":""},
+    {"id":102,"value":"Bangin' Burst","title":"Bangin' Burst","type":3,"score":0,"level":16,"bpm":"234","chain":2403,"clear_rate":58.6,"short_btn":0,"short_long_mix":0,"analog":0,"brain_train":0,"rythm":0,"trap":0,"total":0,"short_tag":"","analog_tag":"","other_tag":""},
+    {"id":103,"value":"Max Burning!!","title":"Max Burning!!","type":4,"score":0,"level":16,"bpm":"190","chain":2329,"clear_rate":63.6,"short_btn":0,"short_long_mix":0,"analog":0,"brain_train":0,"rythm":0,"trap":0,"total":0,"short_tag":"","analog_tag":"","other_tag":""},
     { "id": 15, "value": "冥 Rockin' SWING REMIX", "title": "冥 Rockin' SWING REMIX", "type": 3, "score": -5, "level": 15, "bpm": "200", "chain": 2101, "clear_rate": 78.4, "short_btn": 7, "short_long_mix": 2, "analog": 5, "brain_train": 3, "rythm": 3, "trap": 2, "total": 20, "short_tag": "", "analog_tag": "", "other_tag": "", "ver": 1 },
     { "id": 4, "value": "FLOWER REDALiCE Remix", "title": "FLOWER REDALiCE Remix", "type": 3, "score": -2, "level": 15, "bpm": "180", "chain": 2009, "clear_rate": 63.9, "short_btn": 7, "short_long_mix": 8, "analog": 7, "brain_train": 3, "rythm": 4, "trap": 2, "total": 29, "short_tag": "", "analog_tag": "", "other_tag": "", "ver": 1 },
     { "id": 8, "value": "Onigo", "title": "Onigo", "type": 3, "score": -5, "level": 15, "bpm": "175", "chain": 1778, "clear_rate": 74.0, "short_btn": 2, "short_long_mix": 5, "analog": 7, "brain_train": 4, "rythm": 4, "trap": 2, "total": 22, "short_tag": "", "analog_tag": "", "other_tag": "", "ver": 1 },
