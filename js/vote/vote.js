@@ -2,7 +2,8 @@
 var borderSize = 6;
 
 // var phpHost = "http://sdvxlevel.host-ed.me/";
-var phpHost = "http://sdvxlevel.lionfree.net/";
+// var phpHost = "http://sdvxlevel.lionfree.net/";
+var phpHost = "http://php-sdvxlevel.rhcloud.com/";
 
 function appendSongsByDbResult(db_result, div_dom, header_text) {
     // append new row
