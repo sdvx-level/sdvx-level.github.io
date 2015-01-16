@@ -3,7 +3,8 @@ var borderSize = 6;
 var scoreTypeFontSize = 24;
 
 // var phpHost = "http://sdvxlevel.host-ed.me/";
-var phpHost = "http://sdvxlevel.lionfree.net/";
+// var phpHost = "http://sdvxlevel.lionfree.net/";
+var phpHost = "http://php-sdvxlevel.rhcloud.com/";
 
 // LZW-compress a string
 function lzwEncode(s) {
