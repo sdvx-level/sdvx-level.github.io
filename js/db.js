@@ -731,8 +731,8 @@ function uploadToImgur() {
     html2canvas($("#levels")[0], {
         onrendered: function (canvas) {
             var extra_canvas = document.createElement("canvas");
-            var extra_width = canvas.width / 2;
-            var extra_height = canvas.height / 2;
+            var extra_width = canvas.width / 1.2;
+            var extra_height = canvas.height / 1.2;
             extra_canvas.setAttribute('width', extra_width);
             extra_canvas.setAttribute('height', extra_height);
             var ctx = extra_canvas.getContext('2d');
