@@ -730,7 +730,14 @@ function extractToken(hash) {
 function uploadToImgur() {
     html2canvas($("#levels")[0], {
         onrendered: function (canvas) {
-            var img = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
+            var extra_canvas = document.createElement("canvas");
+            var extra_width = canvas.width / 2;
+            var extra_height = canvas.height / 2;
+            extra_canvas.setAttribute('width', extra_width);
+            extra_canvas.setAttribute('height', extra_height);
+            var ctx = extra_canvas.getContext('2d');
+            ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, extra_width, extra_height);
+            var img = extra_canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
             sessionStorage.doUpload = true;
             sessionStorage.imageBase64 = img;
             // testing used
