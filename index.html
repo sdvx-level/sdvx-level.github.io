@@ -38,11 +38,12 @@
     <body>
         <button id="save_to_browser">儲存至瀏覽器</button>
         <button id="load_from_browser">從瀏覽器讀取</button>
-        <button id="load_from_sdvx_score">從 sdvx-s 讀取</button>
+        <button id="load_from_sdvx_score">從 bluekingdragon 讀取</button>
         <button id="download_as_png">儲存成 PNG</button>
         <button id="upload_to_imgur">上傳到 imgur</button>
         <button id="clear_all_btn">清除成績資料</button>
         <button id="customize">設定</button>
+        <button id="load_customize_score">使用自定義地力表</button>
         <br />
         <br />
         <input type="text" class="ui-widget-content ui-corner-all" id="link" size="100" />
@@ -142,6 +143,11 @@
             <label for="border_size">歌曲邊框大小:</label>
             <input id="border_size">
             <h2>注意！修改設定後歌曲資料會重新繪製，請務必先儲存歌曲資料！！</h2>
+        </div>
+        
+        <!-- Customize Score dialog -->
+        <div id="customize_score_dialog">
+            <textarea id="customize_score_input" class="text ui-widget-content ui-corner-all" style="width: 95%; height: 95%"></textarea>
         </div>
         
         <!-- Song Detail Information dialog -->

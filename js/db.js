@@ -326,7 +326,9 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
         var key = entry.id;
         var title_name = entry.title;
         title_name += " [" + type_to_string(entry.type, entry.id) + "]";
-        var value = entry.value + " " + entry.type;
+        var small_img_url = entry.small_img;
+        var large_img_url = entry.large_img;
+        // var value = entry.value + " " + entry.type;
 
         // read localStorage & set opacity
         var opacity = 1;
@@ -396,7 +398,8 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
 
                     click: function (layer) {
                         // set up overlap div text
-                        var info_text = "<img src=\"" + "img/" + entry.value + " " + entry.type + ".png" + "\" /><br />";
+                        // var info_text = "<img src=\"" + "img/" + entry.value + " " + entry.type + ".png" + "\" /><br />";
+                        var info_text = "<img src=\"" + small_img_url + "\" /><br />";
                         info_text += title_name + "<br />";
                         info_text += "短鍵: " + entry.short_btn + "<br />";
                         info_text += "長短混合: " + entry.short_long_mix + "<br />";
@@ -434,7 +437,8 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                             });
 
                             var song_img_dom = $("<img />", {
-                                src: "img_b/" + value + ".png"
+                                // src: "img_b/" + value + ".png"
+                                src: large_img_url
                             });
 
                             var song_info_table_dom = $("<table class='song_info_table'>" +
@@ -647,9 +651,10 @@ function appendSongsByDbResult(db_result, div_dom, header_text) {
                 layer: true,
                 name: 'song_ver',
                 text: ver_to_string(entry.ver)
-            })
+            });
         }
-        image_obj.src = "img/" + value + ".png";
+        // image_obj.src = "img/" + value + ".png";
+        image_obj.src = small_img_url;
     });
 }
 
@@ -760,6 +765,47 @@ function resetSongs() {
 
 function openCustomize() {
     $("#customize_dialog").dialog("open");
+}
+
+function openCustomizeScore() {
+    $("#customize_score_dialog").dialog("open");
+}
+
+function loadScoreFromInput() {
+    var customize_input = $("#customize_score_input").val();
+    var split_by_lines = customize_input.split("\n");
+    var new_music_db = [];
+    for (var line in split_by_lines) {
+        var split_by_tabs = split_by_lines[line].split("\t");
+        var song_element = {};
+        var index_names = [
+            ["float", "id"],
+            ["str", "small_img"],
+            ["str", "large_img"],
+            ["str", "title"],
+            ["float", "type"],
+            ["float", "level"],
+            ["float", "score"],
+            ["str", "bpm"],
+            ["float", "chain"], 
+            ["float", "clear_rate"], 
+            ["float", "short_btn"], 
+            ["float", "short_long_mix"], 
+            ["float", "analog"], 
+            ["float", "brain_train"], 
+            ["float", "rythm"], 
+            ["float", "trap"], 
+            ["float", "total"]];
+        for (var index in index_names) {
+            if (index_names[index][0] == "float") {
+                song_element[index_names[index][1]] = parseFloat(split_by_tabs[index]);
+            } else {
+                song_element[index_names[index][1]] = split_by_tabs[index];
+            }
+        }
+        new_music_db.push(song_element);
+    }
+    window.music_db = TAFFY(new_music_db);
 }
 
 /**********************************************************
@@ -1068,6 +1114,8 @@ function getValueFromSongType(song_type) {
             return 3;
         case "infinite":
             return 4;
+        case "gravity":
+            return 4;
         default:
             return 0;
     }
@@ -1164,6 +1212,99 @@ function loadFromSDVXScore() {
 }
 
 /**********************************************************
+ * Load from http://bluekingdragon.dip.jp/sdvx/
+ **********************************************************/
+function loadFromBluekingdragon() {
+    var username = prompt("請輸入 sdvx-s 的 user name", "Nierrrrrrr");
+    if (username == null)
+        return;
+
+    $("#save_load_dialog").html("讀取中...");
+    $("#save_load_dialog").dialog("open");
+
+    $.getJSON("http://bluekingdragon.dip.jp/sdvx/showUserData.php?id=" + username + "&output=json&callback=?")
+        .done(function (data) {
+            var tracks = data.profile.tracks;
+            for (var track_index in tracks) {
+                var track = tracks[track_index];
+                var track_title = track.title;
+                // parse &amp; to &
+                var div = document.createElement('div');
+                div.innerHTML = track_title;
+                track_title = div.firstChild.nodeValue;
+                // trim "(EXIT TUNES)" from end of the song title
+                var track_title_trim_index = track_title.lastIndexOf("(EXIT TUNES)");
+                if (track_title_trim_index != -1) {
+                    track_title = track_title.substring(0, track_title_trim_index);
+                }
+                for (var info_index in track) {
+                    var info = track[info_index];
+                    var song_type = getValueFromSongType(info_index);
+                    if (song_type == 0)
+                        continue;
+
+                    // find elem of this song
+                    var db_result = music_db({ title: track_title, type: song_type });
+                    if (db_result.count() == 0)
+                        continue;
+
+                    var song_id = db_result.first().id;
+                    var elem = $(".elem[data-music-id=" + song_id.toString() + "]");
+
+                    // info.grade
+                    // b, a, aa, aaa
+                    switch (info.grade) {
+                        case "b":
+                            setTypeByValue(elem.find("canvas"), 1);
+                            break;
+                        case "a":
+                            setTypeByValue(elem.find("canvas"), 2);
+                            break;
+                        case "aa":
+                            setTypeByValue(elem.find("canvas"), 3);
+                            break;
+                        case "aaa":
+                            setTypeByValue(elem.find("canvas"), 4);
+                            break;
+                        default:
+                            setTypeByValue(elem.find("canvas"), 0);
+                            break;
+                    }
+
+                    // info.medal
+                    // crash, comp, excessive, uc, per
+                    switch (info.medal) {
+                        case "crash":
+                            setClearByValue(elem, 0);
+                            break;
+                        case "comp":
+                            setClearByValue(elem, 1);
+                            break;
+                        case "excessive":
+                            setClearByValue(elem, 2);
+                            break;
+                        case "uc":
+                            setClearByValue(elem, 3);
+                            break;
+                        case "per":
+                            setClearByValue(elem, 4);
+                            break;
+                        default:
+                            setClearByValue(elem, 0);
+                            break;
+                    }
+                }
+            }
+        })
+        .fail(function (e) {
+            return;
+        })
+        .always(function () {
+            $("#save_load_dialog").dialog("close");
+        });
+}
+
+/**********************************************************
  * Youtube API function
  **********************************************************/
 var YoutubeApiLoadDone = false;
@@ -1226,7 +1367,7 @@ $(document).ready(function () {
 
     $("#save_to_browser").button().on("click", saveToLocalStorage);
     $("#load_from_browser").button().on("click", loadFromLocalStorage);
-    $("#load_from_sdvx_score").button().on("click", loadFromSDVXScore);
+    $("#load_from_sdvx_score").button().on("click", loadFromBluekingdragon);
     $("#generate_link").button().on("click", updateLink);
 
     $("#download_as_png").button().on("click", downloadAsPng);
@@ -1234,6 +1375,7 @@ $(document).ready(function () {
     $("#upload_to_imgur").button().on("click", uploadToImgur);
 
     $("#customize").button().on("click", openCustomize);
+    $("#load_customize_score").button().on("click", openCustomizeScore);
 
     $('#song_info_popup').popup({
         blur: false,
@@ -1344,6 +1486,34 @@ $(document).ready(function () {
             $('#wrap').show(); $("body").removeClass("no_scroll");
         },
         open: function (event, ui) { $('.ui-widget-overlay').bind('click', function () { $("#customize_dialog").dialog('close'); }); $("body").addClass("no_scroll"); },
+        show: { effect: "blind", duration: 500 },
+        hide: { effect: "blind", duration: 500 }
+    });
+    // 設定 customize score dialog
+    $("#customize_score_dialog").dialog({
+        autoOpen: false,
+        closeOnEscape: true,
+        draggable: false,
+        modal: true,
+        width: window_width * 0.8,
+        height: window_height * 0.8,
+        maxHeight: window_height * 0.8,
+        title: "讀取自定義地力表",
+        position: { my: "center top", at: "center top+10%", of: window },
+        buttons: {
+            "應用": function () {
+                loadScoreFromInput();
+                resetSongs();
+                $(this).dialog("close");
+            },
+            "取消": function () {
+                $(this).dialog("close");
+            }
+        },
+        close: function (event, ui) {
+            $('#wrap').show(); $("body").removeClass("no_scroll");
+        },
+        open: function (event, ui) { $('.ui-widget-overlay').bind('click', function () { $("#customize_score_dialog").dialog('close'); }); $("body").addClass("no_scroll"); },
         show: { effect: "blind", duration: 500 },
         hide: { effect: "blind", duration: 500 }
     });
